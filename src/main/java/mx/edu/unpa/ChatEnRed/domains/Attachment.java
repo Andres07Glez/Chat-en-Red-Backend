@@ -8,24 +8,28 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+
 @Data
 @Entity
-@Table(name="audit_events")
-
-public class AuditEvent implements Serializable{
-
-	private static final long serialVersionUID = 1L;
+@Table(name="attachments")
+public class Attachment implements Serializable{
+	private static final long serialVersionUID =1L;
 	@Id
-	@Column(name="id")
 	private int id;
 	//llave foranea
-	@Column(name="user_id")
-	private String userId;
-	@Column(name="event_type")
-	private String eventType;
-	@Column(name="event_data")
-	private String eventData;
+	@Column(name="message_id")
+	private int messageId;
+	private String filename;
+	@Column(name="mime_type")
+	private String mimeType;
+	private int size;
+	@Column(name="storage_url")
+	private String storageURL;
+	private String checksum;
 	@Column(name="created_at")
 	private LocalDate createdAt;
 	
+	
+	
+
 }
