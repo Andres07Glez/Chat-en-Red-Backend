@@ -20,7 +20,7 @@ public class AuditEvent implements Serializable{
 	private int id;
 	//llave foranea
 	@Column(name="user_id")
-	private String userId;
+	private int userId;
 	@Column(name="event_type")
 	private String eventType;
 	@Column(name="event_data")
