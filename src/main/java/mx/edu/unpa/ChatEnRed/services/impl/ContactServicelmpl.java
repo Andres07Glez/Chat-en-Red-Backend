@@ -3,12 +3,14 @@ package mx.edu.unpa.ChatEnRed.services.impl;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import mx.edu.unpa.ChatEnRed.domains.Contact;
 import mx.edu.unpa.ChatEnRed.repositories.ContactRepository;
 import mx.edu.unpa.ChatEnRed.services.ContactService;
 
+@Service
 public class ContactServicelmpl implements ContactService {
 	@Autowired
 	private ContactRepository contactRepository;
