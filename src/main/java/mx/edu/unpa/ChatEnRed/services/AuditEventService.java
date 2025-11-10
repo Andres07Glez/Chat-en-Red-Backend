@@ -9,6 +9,6 @@ public interface AuditEventService {
 	public Iterable<AuditEvent> findAll();
 	//public Page<Teacher> findAll(Pageable pageable);
 	public Optional<AuditEvent> findById(int id);
-	public AuditEvent save(AuditEvent calificacion);
+	public AuditEvent save(AuditEvent auditEvent);
 	public void deleteById(int id);
 }
