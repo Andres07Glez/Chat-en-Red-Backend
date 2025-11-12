@@ -10,7 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
-import mx.edu.unpa.ChatEnRed.enums.MessageStatus;
+import mx.edu.unpa.ChatEnRed.enums.MessageType;
 
 @Data
 @Entity
@@ -25,8 +25,8 @@ public class Message implements Serializable{
 	private int senderId;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name="status")
-	private MessageStatus status = MessageStatus.TEXT;
+	@Column(name="message_type")
+	private MessageType messageType = MessageType.TEXT;
 	
 	
 	@Column(name="content")

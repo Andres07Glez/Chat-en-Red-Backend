@@ -19,8 +19,8 @@ public class ConversationMember implements Serializable{
 	private static final long serialVersionUID =1L;
 	@Id
 	private int id;
-	@Column(name="conversatio_id")
-	private int conversatioId;
+	@Column(name="conversation_id")
+	private int conversationId;
 	@Column(name="user_id")
 	private int userId;
 	@Enumerated(EnumType.STRING)
