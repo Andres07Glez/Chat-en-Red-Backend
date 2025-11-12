@@ -25,7 +25,7 @@ public class ConversationMember implements Serializable{
 	private int userId;
 	@Enumerated(EnumType.STRING)
 	@Column(name="role")
-	private RoleStatus status = RoleStatus.MEMBER;
+	private RoleStatus role = RoleStatus.MEMBER;
 	@Column(name="joined_at")
 	private LocalDate joinedAt;
 	
