@@ -25,7 +25,7 @@ public class ConversationMemberServicioImpl implements ConversationMemberService
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<ConversationMember> findById(int id) {
+	public Optional<ConversationMember> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.conversationMemberRepository.findById(null);
 	}
@@ -39,7 +39,7 @@ public class ConversationMemberServicioImpl implements ConversationMemberService
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.conversationMemberRepository.deleteById(id);
 		

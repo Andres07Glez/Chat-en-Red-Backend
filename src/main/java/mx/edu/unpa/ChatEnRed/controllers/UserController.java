@@ -37,7 +37,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int userEventId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer userEventId) {
 		Optional<User> oUser=this.userService.findById(userEventId);
 		if(oUser.isPresent()) {
 			LinkedList<User> userList=new LinkedList<>();
@@ -57,7 +57,7 @@ public class UserController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int userId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer userId) {
 		Optional<User> oUser=this.userService.findById(userId);
 		if(oUser.isPresent()) {
 			this.userService.deleteById(userId);
@@ -68,7 +68,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<User> upd(@PathVariable(value="id") int userId) {
+	public ResponseEntity<User> upd(@PathVariable(value="id") Integer userId) {
 		Optional<User> oUser=this.userService.findById(userId);
 		if(oUser.isPresent()) {
 			return ResponseEntity.ok(oUser.get());

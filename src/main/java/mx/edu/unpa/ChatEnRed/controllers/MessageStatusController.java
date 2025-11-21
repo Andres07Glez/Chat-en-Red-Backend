@@ -39,7 +39,7 @@ public class MessageStatusController {
     }
     
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") int messageStatusId) {
+    public ResponseEntity<?> read(@RequestParam("id") Integer messageStatusId) {
         Optional<MessageStatus> oMessageStatus = this.messageStatusService.findById(messageStatusId);
         if(oMessageStatus.isPresent()) {
             LinkedList<MessageStatus> messageStatusList = new LinkedList<>();
@@ -57,7 +57,7 @@ public class MessageStatusController {
     }
     
     @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") int messageStatusId) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer messageStatusId) {
         Optional<MessageStatus> oMessageStatus = this.messageStatusService.findById(messageStatusId);
         if(oMessageStatus.isPresent()) {
             this.messageStatusService.deleteById(messageStatusId);
@@ -68,7 +68,7 @@ public class MessageStatusController {
     }
     
     @GetMapping("/upd/{id}")
-    public ResponseEntity<MessageStatus> upd(@PathVariable(value = "id") int messageStatusId) {
+    public ResponseEntity<MessageStatus> upd(@PathVariable(value = "id") Integer messageStatusId) {
         Optional<MessageStatus> oMessageStatus = this.messageStatusService.findById(messageStatusId);
         if(oMessageStatus.isPresent()) {
             return ResponseEntity.ok(oMessageStatus.get());

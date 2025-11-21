@@ -22,7 +22,7 @@ import mx.edu.unpa.ChatEnRed.services.MessageService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/messages")
+@RequestMapping("/message")
 public class MessageController {
 	@Autowired
 	private MessageService messageService;
@@ -37,7 +37,7 @@ public class MessageController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int messageId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer messageId) {
 		Optional<Message> oMessage=this.messageService.findById(messageId);
 		if(oMessage.isPresent()) {
 			LinkedList<Message> messageList=new LinkedList<>();
@@ -57,7 +57,7 @@ public class MessageController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int messageId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer messageId) {
 		Optional<Message> oMessage=this.messageService.findById(messageId);
 		if(oMessage.isPresent()) {
 			this.messageService.deleteById(messageId);
@@ -68,7 +68,7 @@ public class MessageController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<Message> upd(@PathVariable(value="id") int messageId) {
+	public ResponseEntity<Message> upd(@PathVariable(value="id") Integer messageId) {
 		Optional<Message> oMessage=this.messageService.findById(messageId);
 		if(oMessage.isPresent()) {
 			return ResponseEntity.ok(oMessage.get());

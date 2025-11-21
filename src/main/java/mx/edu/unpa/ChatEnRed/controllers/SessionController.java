@@ -37,7 +37,7 @@ public class SessionController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int sessionId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer sessionId) {
 		Optional<Session> oSession=this.sessionService.findById(sessionId);
 		if(oSession.isPresent()) {
 			LinkedList<Session> sessionList=new LinkedList<>();
@@ -57,7 +57,7 @@ public class SessionController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int sessionId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer sessionId) {
 		Optional<Session> oSession=this.sessionService.findById(sessionId);
 		if(oSession.isPresent()) {
 			this.sessionService.deleteById(sessionId);
@@ -68,7 +68,7 @@ public class SessionController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<Session> upd(@PathVariable(value="id") int sessionId) {
+	public ResponseEntity<Session> upd(@PathVariable(value="id") Integer sessionId) {
 		Optional<Session> oSession=this.sessionService.findById(sessionId);
 		if(oSession.isPresent()) {
 			return ResponseEntity.ok(oSession.get());

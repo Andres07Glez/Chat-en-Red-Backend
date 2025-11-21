@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<User> findById(int id) {
+	public Optional<User> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.userRepository.findById(id);
 	}
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.userRepository.deleteById(id);
 		

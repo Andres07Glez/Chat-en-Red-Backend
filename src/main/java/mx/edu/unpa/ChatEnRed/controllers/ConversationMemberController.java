@@ -21,7 +21,7 @@ import mx.edu.unpa.ChatEnRed.services.ConversationMemberService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/conversation_members")
+@RequestMapping("/conversation-members")
 public class ConversationMemberController {
 	@Autowired
 	private ConversationMemberService conversationMemberService;
@@ -37,7 +37,7 @@ public class ConversationMemberController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int conversationMemberId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer conversationMemberId) {
 		Optional<ConversationMember> oConversationMember=this.conversationMemberService.findById(conversationMemberId);
 		if(oConversationMember.isPresent()) {
 			LinkedList<ConversationMember> conversationMemberList=new LinkedList<>();
@@ -58,7 +58,7 @@ public class ConversationMemberController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int conversationMemberId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer conversationMemberId) {
 		Optional<ConversationMember> oConversationMember=this.conversationMemberService.findById(conversationMemberId);
 		if(oConversationMember.isPresent()) {
 			this.conversationMemberService.deleteById(conversationMemberId);
@@ -69,7 +69,7 @@ public class ConversationMemberController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<ConversationMember> upd(@PathVariable(value="id") int conversationMemberId) {
+	public ResponseEntity<ConversationMember> upd(@PathVariable(value="id") Integer conversationMemberId) {
 		Optional<ConversationMember> oConversationMember=this.conversationMemberService.findById(conversationMemberId);
 		if(oConversationMember.isPresent()) {
 			return ResponseEntity.ok(oConversationMember.get());

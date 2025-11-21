@@ -13,7 +13,7 @@ import mx.edu.unpa.ChatEnRed.services.UserProfileService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/user-profile")
 public class UserProfileController {
 
     @Autowired
@@ -25,7 +25,7 @@ public class UserProfileController {
     }
 
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") int userId) {
+    public ResponseEntity<?> read(@RequestParam("id") Integer userId) {
         Optional<UserProfile> o = this.profileService.findById(userId);
         if (o.isPresent()) {
             LinkedList<UserProfile> list = new LinkedList<>();
@@ -43,7 +43,7 @@ public class UserProfileController {
     }
 
     @GetMapping("/upd/{id}")
-    public ResponseEntity<UserProfile> upd(@PathVariable(value = "id") int userId) {
+    public ResponseEntity<UserProfile> upd(@PathVariable(value = "id") Integer userId) {
         Optional<UserProfile> o = this.profileService.findById(userId);
         if (o.isPresent()) {
             return ResponseEntity.ok(o.get());
@@ -63,7 +63,7 @@ public class UserProfileController {
     }
 
     @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") int userId) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer userId) {
         Optional<UserProfile> o = this.profileService.findById(userId);
         if (o.isPresent()) {
             this.profileService.deleteById(userId);

@@ -23,7 +23,7 @@ public class ContactServicelmpl implements ContactService {
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<Contact> FindById(int id) {
+	public Optional<Contact> FindById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.contactRepository.findById(id);
 	}
@@ -37,7 +37,7 @@ public class ContactServicelmpl implements ContactService {
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.contactRepository.deleteById(id);
 		

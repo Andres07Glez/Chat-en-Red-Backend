@@ -39,7 +39,7 @@ public class ConversationController {
     }
     
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") int conversationId) {
+    public ResponseEntity<?> read(@RequestParam("id") Integer conversationId) {
         Optional<Conversation> oConversation = this.conversationService.findById(conversationId);
         if(oConversation.isPresent()) {
             LinkedList<Conversation> conversationList = new LinkedList<>();
@@ -57,7 +57,7 @@ public class ConversationController {
     }
     
     @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") int conversationId) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer conversationId) {
         Optional<Conversation> oConversation = this.conversationService.findById(conversationId);
         if(oConversation.isPresent()) {
             this.conversationService.deleteById(conversationId);
@@ -68,7 +68,7 @@ public class ConversationController {
     }
     
     @GetMapping("/upd/{id}")
-    public ResponseEntity<Conversation> upd(@PathVariable(value = "id") int conversationId) {
+    public ResponseEntity<Conversation> upd(@PathVariable(value = "id") Integer conversationId) {
         Optional<Conversation> oConversation = this.conversationService.findById(conversationId);
         if(oConversation.isPresent()) {
             return ResponseEntity.ok(oConversation.get());

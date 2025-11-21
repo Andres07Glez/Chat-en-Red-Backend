@@ -21,7 +21,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public Optional<UserProfile> findById(int userId) {
+    public Optional<UserProfile> findById(Integer userId) {
         return repo.findById(userId);
     }
 
@@ -31,7 +31,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public void deleteById(int userId) {
+    public void deleteById(Integer userId) {
         repo.deleteById(userId);
     }
 }

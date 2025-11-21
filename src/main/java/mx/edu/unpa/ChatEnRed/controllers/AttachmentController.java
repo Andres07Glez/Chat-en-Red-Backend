@@ -37,7 +37,7 @@ public class AttachmentController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int attachmentEventId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer attachmentEventId) {
 		Optional<Attachment> oAttachment=this.attachmentService.findById(attachmentEventId);
 		if(oAttachment.isPresent()) {
 			LinkedList<Attachment> attachmentList=new LinkedList<>();
@@ -57,7 +57,7 @@ public class AttachmentController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int attachmentId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer attachmentId) {
 		Optional<Attachment> oAttachment=this.attachmentService.findById(attachmentId);
 		if(oAttachment.isPresent()) {
 			this.attachmentService.deleteById(attachmentId);
@@ -68,7 +68,7 @@ public class AttachmentController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<Attachment> upd(@PathVariable(value="id") int attachmentId) {
+	public ResponseEntity<Attachment> upd(@PathVariable(value="id") Integer attachmentId) {
 		Optional<Attachment> oAttachment=this.attachmentService.findById(attachmentId);
 		if(oAttachment.isPresent()) {
 			return ResponseEntity.ok(oAttachment.get());

@@ -22,7 +22,7 @@ import mx.edu.unpa.ChatEnRed.services.AuditEventService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/audit-Event")
+@RequestMapping("/audit-event")
 public class AuditEventController {
 	@Autowired
 	private AuditEventService auditEventService;
@@ -37,7 +37,7 @@ public class AuditEventController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int auditEventId) {
+	public ResponseEntity<?> read(@RequestParam("id") Integer auditEventId) {
 		Optional<AuditEvent> oAuditEvent=this.auditEventService.findById(auditEventId);
 		if(oAuditEvent.isPresent()) {
 			LinkedList<AuditEvent> auditEventList=new LinkedList<>();
@@ -57,7 +57,7 @@ public class AuditEventController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int auditEventId) {
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer auditEventId) {
 		Optional<AuditEvent> oAuditEvent=this.auditEventService.findById(auditEventId);
 		if(oAuditEvent.isPresent()) {
 			this.auditEventService.deleteById(auditEventId);
@@ -68,7 +68,7 @@ public class AuditEventController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<AuditEvent> upd(@PathVariable(value="id") int auditEventId) {
+	public ResponseEntity<AuditEvent> upd(@PathVariable(value="id") Integer auditEventId) {
 		Optional<AuditEvent> oAuditEvent=this.auditEventService.findById(auditEventId);
 		if(oAuditEvent.isPresent()) {
 			return ResponseEntity.ok(oAuditEvent.get());

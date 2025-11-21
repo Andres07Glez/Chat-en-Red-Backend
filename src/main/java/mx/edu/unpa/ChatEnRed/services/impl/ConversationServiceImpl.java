@@ -24,7 +24,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Conversation> findById(int id) {
+    public Optional<Conversation> findById(Integer id) {
         return this.conversationRepository.findById(id);
     }
 
@@ -36,7 +36,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public void deleteById(int id) {
+    public void deleteById(Integer id) {
         this.conversationRepository.deleteById(id);
     }
 }

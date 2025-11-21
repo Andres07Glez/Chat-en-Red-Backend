@@ -37,7 +37,7 @@ public class contactController {
 	}
 	
 	@GetMapping("/fnd")
-	public ResponseEntity<?> read(@RequestParam("id") int contactId){
+	public ResponseEntity<?> read(@RequestParam("id") Integer contactId){
 		Optional<Contact> oContact=this.contactService.FindById(contactId);
 		if(oContact.isPresent()) {
 			LinkedList<Contact> contactList=new LinkedList<>();
@@ -56,7 +56,7 @@ public class contactController {
 	}
 	
 	@DeleteMapping("/del/{id}")
-	public ResponseEntity<Void> delete(@PathVariable("id") int contactId){
+	public ResponseEntity<Void> delete(@PathVariable("id") Integer contactId){
 		Optional<Contact> oContact=this.contactService.FindById(contactId);
 		if(oContact.isPresent()) {
 			this.contactService.deleteById(contactId);
@@ -67,7 +67,7 @@ public class contactController {
 	}
 	
 	@GetMapping("/upd/{id}")
-	public ResponseEntity<Contact> upd(@PathVariable(value="id") int contactId){
+	public ResponseEntity<Contact> upd(@PathVariable(value="id") Integer contactId){
 		Optional<Contact> oContact=this.contactService.FindById(contactId);
 		if(oContact.isPresent()) {
 			return ResponseEntity.ok(oContact.get());

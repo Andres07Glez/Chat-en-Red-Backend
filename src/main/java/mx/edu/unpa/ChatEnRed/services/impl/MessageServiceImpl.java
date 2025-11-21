@@ -25,7 +25,7 @@ public class MessageServiceImpl implements MessageService{
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<Message> findById(int id) {
+	public Optional<Message> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.messageRepository.findById(id);
 	}
@@ -39,7 +39,7 @@ public class MessageServiceImpl implements MessageService{
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.messageRepository.deleteById(id);
 		

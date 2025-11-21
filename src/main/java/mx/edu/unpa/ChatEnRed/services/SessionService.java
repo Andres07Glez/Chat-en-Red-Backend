@@ -8,8 +8,8 @@ import mx.edu.unpa.ChatEnRed.domains.Session;
 public interface SessionService {
 	public Iterable<Session> findAll();
 	//public Page<Teacher> findAll(Pageable pageable);
-	public Optional<Session> findById(int id);
+	public Optional<Session> findById(Integer id);
 	public Session save(Session session);
-	public void deleteById(int id);
+	public void deleteById(Integer id);
 
 }

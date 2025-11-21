@@ -24,7 +24,7 @@ public class MessageStatusServiceImpl implements MessageStatusService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<MessageStatus> findById(int id) {
+    public Optional<MessageStatus> findById(Integer id) {
         return this.messageStatusRepository.findById(id);
     }
 
@@ -36,7 +36,7 @@ public class MessageStatusServiceImpl implements MessageStatusService {
 
     @Override
     @Transactional
-    public void deleteById(int id) {
+    public void deleteById(Integer id) {
         this.messageStatusRepository.deleteById(id);
     }
 }

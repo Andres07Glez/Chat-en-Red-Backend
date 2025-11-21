@@ -8,7 +8,7 @@ import mx.edu.unpa.ChatEnRed.domains.AuditEvent;
 public interface AuditEventService {
 	public Iterable<AuditEvent> findAll();
 	//public Page<Teacher> findAll(Pageable pageable);
-	public Optional<AuditEvent> findById(int id);
+	public Optional<AuditEvent> findById(Integer id);
 	public AuditEvent save(AuditEvent auditEvent);
-	public void deleteById(int id);
+	public void deleteById(Integer id);
 }

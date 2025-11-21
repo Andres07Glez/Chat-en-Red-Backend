@@ -25,7 +25,7 @@ public class SessionServiceImpl implements SessionService{
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<Session> findById(int id) {
+	public Optional<Session> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.sessionRepository.findById(id);
 	}
@@ -39,7 +39,7 @@ public class SessionServiceImpl implements SessionService{
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.sessionRepository.deleteById(id);
 		

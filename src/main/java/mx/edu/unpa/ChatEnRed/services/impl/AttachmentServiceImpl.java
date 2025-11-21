@@ -25,7 +25,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<Attachment> findById(int id) {
+	public Optional<Attachment> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.attachmentRepository.findById(id);
 	}
@@ -39,7 +39,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.attachmentRepository.deleteById(id);
 		

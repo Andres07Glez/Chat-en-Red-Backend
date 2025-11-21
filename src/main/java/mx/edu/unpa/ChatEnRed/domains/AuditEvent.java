@@ -1,31 +1,66 @@
 package mx.edu.unpa.ChatEnRed.domains;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import lombok.Data;
-@Data
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 @Entity
-@Table(name="audit_events")
-
+@Table(name = "audit_events", indexes = {
+    @Index(name = "idx_audit_user", columnList = "user_id")
+})
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA necesita constructor sin-args; protected evita uso accidental
+@AllArgsConstructor
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class AuditEvent implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	@Id
-	@Column(name="id")
-	private int id;
-	//llave foranea
-	@Column(name="user_id")
-	private int userId;
-	@Column(name="event_type")
-	private String eventType;
-	@Column(name="event_data")
-	private String eventData;
-	@Column(name="created_at")
-	private LocalDate createdAt;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "event_type", length = 50, nullable = false)
+    @ToString.Include
+    private String eventType;
+
+    @Column(name = "event_data", length = 200)
+    @ToString.Include
+    private String eventData;
+
+    @Column(name = "created_at", nullable = false)
+    @ToString.Include
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 	
 }

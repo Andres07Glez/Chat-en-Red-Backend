@@ -22,12 +22,12 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Optional<Device> findById(int id) {
+    public Optional<Device> findById(Integer id) {
         return repo.findById(id);
     }
 
     @Override
-    public List<Device> findByUserId(int userId) {
+    public List<Device> findByUserId(Integer userId) {
         return repo.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
@@ -37,7 +37,7 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public void deleteById(int id) {
+    public void deleteById(Integer id) {
         repo.deleteById(id);
     }
 }

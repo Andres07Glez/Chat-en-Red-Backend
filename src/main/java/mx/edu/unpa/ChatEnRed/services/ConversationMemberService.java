@@ -7,9 +7,9 @@ import mx.edu.unpa.ChatEnRed.domains.ConversationMember;
 public interface ConversationMemberService {
 	public Iterable<ConversationMember> findAll();
 	 
-	public Optional<ConversationMember> findById(int id);
+	public Optional<ConversationMember> findById(Integer id);
 	public ConversationMember save(ConversationMember conversationMember);
-	public void deleteById(int id);
+	public void deleteById(Integer id);
 	
 
 }

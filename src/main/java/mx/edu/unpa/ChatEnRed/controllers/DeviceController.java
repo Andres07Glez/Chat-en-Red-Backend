@@ -26,7 +26,7 @@ public class DeviceController {
     }
 
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") int deviceId) {
+    public ResponseEntity<?> read(@RequestParam("id") Integer deviceId) {
         Optional<Device> o = this.deviceService.findById(deviceId);
         if (o.isPresent()) {
             LinkedList<Device> list = new LinkedList<>();
@@ -39,7 +39,7 @@ public class DeviceController {
 
     // Listar dispositivos de un usuario
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> listByUser(@PathVariable("userId") int userId) {
+    public ResponseEntity<?> listByUser(@PathVariable("userId") Integer userId) {
         List<Device> devices = this.deviceService.findByUserId(userId);
         return ResponseEntity.ok(devices);
     }
@@ -61,7 +61,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") int deviceId) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer deviceId) {
         Optional<Device> o = this.deviceService.findById(deviceId);
         if (o.isPresent()) {
             this.deviceService.deleteById(deviceId);

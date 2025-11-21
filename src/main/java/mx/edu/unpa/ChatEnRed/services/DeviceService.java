@@ -7,8 +7,8 @@ import mx.edu.unpa.ChatEnRed.domains.Device;
 
 public interface DeviceService {
     Iterable<Device> findAll();
-    Optional<Device> findById(int id);
-    List<Device> findByUserId(int userId);
+    Optional<Device> findById(Integer id);
+    List<Device> findByUserId(Integer userId);
     Device save(Device device);
-    void deleteById(int id);
+    void deleteById(Integer id);
 }

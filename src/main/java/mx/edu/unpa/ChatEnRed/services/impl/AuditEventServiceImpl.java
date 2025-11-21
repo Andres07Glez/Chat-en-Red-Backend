@@ -25,7 +25,7 @@ public class AuditEventServiceImpl implements AuditEventService{
 
 	@Override
 	@Transactional(readOnly=true)
-	public Optional<AuditEvent> findById(int id) {
+	public Optional<AuditEvent> findById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.auditEventRepository.findById(id);
 	}
@@ -39,7 +39,7 @@ public class AuditEventServiceImpl implements AuditEventService{
 
 	@Override
 	@Transactional
-	public void deleteById(int id) {
+	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		this.auditEventRepository.deleteById(id);
 		

@@ -6,9 +6,9 @@ import mx.edu.unpa.ChatEnRed.domains.Contact;
 
 public interface ContactService {
 	public Iterable<Contact> findAll();
-	public Optional<Contact> FindById(int id);
+	public Optional<Contact> FindById(Integer id);
 	public Contact save(Contact contact);
-	public void deleteById(int id);
+	public void deleteById(Integer id);
 	
 	
 	
