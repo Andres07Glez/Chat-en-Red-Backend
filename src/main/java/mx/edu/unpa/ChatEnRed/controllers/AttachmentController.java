@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.AttachmentRequest;
-import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.AttachmentResponse;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.MessageResponse;
 import mx.edu.unpa.ChatEnRed.services.AttachmentService;
 

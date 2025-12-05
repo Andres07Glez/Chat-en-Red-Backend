@@ -1,4 +1,4 @@
-package mx.edu.unpa.ChatEnRed.DTOs.Message.Request;
+package mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request;
 
 import java.time.LocalDateTime;
 

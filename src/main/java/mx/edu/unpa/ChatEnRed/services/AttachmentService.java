@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import mx.edu.unpa.ChatEnRed.domains.Attachment;
-import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.AttachmentRequest;
-import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.AttachmentResponse;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
 
 public interface AttachmentService {
     List<AttachmentResponse> findAll();
