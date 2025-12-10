@@ -2,8 +2,13 @@ package mx.edu.unpa.ChatEnRed.mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+<<<<<<< HEAD
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.AttachmentRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.AttachmentResponse;
+=======
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
+>>>>>>> origin/JoseBranch
 import mx.edu.unpa.ChatEnRed.domains.Attachment;
 import mx.edu.unpa.ChatEnRed.domains.Message;
 

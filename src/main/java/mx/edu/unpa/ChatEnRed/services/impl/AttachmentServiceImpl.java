@@ -10,8 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+<<<<<<< HEAD
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.AttachmentRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.AttachmentResponse;
+=======
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
+>>>>>>> origin/JoseBranch
 import mx.edu.unpa.ChatEnRed.domains.Attachment;
 import mx.edu.unpa.ChatEnRed.domains.Message;
 import mx.edu.unpa.ChatEnRed.mappers.AttachmentMapper;
