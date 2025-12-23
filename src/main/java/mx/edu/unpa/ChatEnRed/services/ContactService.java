@@ -1,16 +1,15 @@
 package mx.edu.unpa.ChatEnRed.services;
 
+import java.util.List;
 import java.util.Optional;
 
-import mx.edu.unpa.ChatEnRed.domains.Contact;
+import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
 
 public interface ContactService {
-	public Iterable<Contact> findAll();
-	public Optional<Contact> FindById(Integer id);
-	public Contact save(Contact contact);
-	public void deleteById(Integer id);
-	
-	
-	
-
+    List<ContactResponse> findAll();
+    Optional<ContactResponse> findById(Integer id);
+    Optional<ContactResponse> save(ContactRequest request);
+    Optional<Boolean> deleteById(Integer id);
+    Optional<ContactResponse> update(Integer id, ContactRequest request);
 }

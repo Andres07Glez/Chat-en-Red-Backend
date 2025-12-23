@@ -1,6 +1,6 @@
 package mx.edu.unpa.ChatEnRed.controllers;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import mx.edu.unpa.ChatEnRed.domains.UserProfile;
+import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Request.UserProfileRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Response.UserProfileResponse;
 import mx.edu.unpa.ChatEnRed.services.UserProfileService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
@@ -17,59 +18,44 @@ import mx.edu.unpa.ChatEnRed.services.UserProfileService;
 public class UserProfileController {
 
     @Autowired
-    private UserProfileService profileService;
+    private UserProfileService userProfileService;
 
-    @GetMapping(path = "/app")
-    public Iterable<UserProfile> index() {
-        return this.profileService.findAll();
-    }
+	@GetMapping(path = "/app")
+	ResponseEntity<List<UserProfileResponse>> findAll() {
+		return Optional
+                .of(this.userProfileService.findAll())
+                .map(ResponseEntity::ok)
+                .orElseGet(ResponseEntity.notFound()::build);
+		
+	}
 
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") Integer userId) {
-        Optional<UserProfile> o = this.profileService.findById(userId);
-        if (o.isPresent()) {
-            LinkedList<UserProfile> list = new LinkedList<>();
-            list.add(o.get());
-            return ResponseEntity.ok(list);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Perfil no encontrado");
-        }
+    public ResponseEntity<UserProfileResponse> findById(@RequestParam("userId") Integer userId) {
+        return userProfileService.findById(userId)
+                .map(ResponseEntity::ok)
+                .orElseGet(ResponseEntity.notFound()::build);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<UserProfile> create(@RequestBody UserProfile profile) {
-        UserProfile saved = this.profileService.save(profile);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<UserProfileResponse> save(@RequestBody UserProfileRequest request) {
+        return userProfileService.save(request)
+                .map(resp -> ResponseEntity.ok().body(resp))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    @GetMapping("/upd/{id}")
-    public ResponseEntity<UserProfile> upd(@PathVariable(value = "id") Integer userId) {
-        Optional<UserProfile> o = this.profileService.findById(userId);
-        if (o.isPresent()) {
-            return ResponseEntity.ok(o.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    @DeleteMapping("/del/{userId}")
+    public ResponseEntity<Object> delete(@PathVariable("userId") Integer userId) {
+        return userProfileService.deleteById(userId)
+                .map(deleted -> ResponseEntity.noContent().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @PutMapping("/save")
-    public ResponseEntity<UserProfile> save(@RequestBody UserProfile profile) {
-        if (profile != null) {
-            UserProfile saved = this.profileService.save(profile);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Integer userId) {
-        Optional<UserProfile> o = this.profileService.findById(userId);
-        if (o.isPresent()) {
-            this.profileService.deleteById(userId);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<UserProfileResponse> update(
+            @PathVariable("userId") Integer userId,
+            @RequestBody UserProfileRequest request) {
+        return userProfileService.update(userId, request)
+                .map(resp -> ResponseEntity.ok().body(resp))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 }

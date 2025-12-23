@@ -1,12 +1,15 @@
 package mx.edu.unpa.ChatEnRed.services;
 
+import java.util.List;
 import java.util.Optional;
 
-import mx.edu.unpa.ChatEnRed.domains.UserProfile;
+import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Request.UserProfileRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Response.UserProfileResponse;
 
 public interface UserProfileService {
-    public Iterable<UserProfile> findAll();
-    public Optional<UserProfile> findById(Integer userId);
-    public UserProfile save(UserProfile profile);
-    public void deleteById(Integer userId);
+    List<UserProfileResponse> findAll();
+    Optional<UserProfileResponse> findById(Integer userId);
+    Optional<UserProfileResponse> save(UserProfileRequest request);
+    Optional<Boolean> deleteById(Integer userId);
+    Optional<UserProfileResponse> update(Integer userId, UserProfileRequest request);
 }

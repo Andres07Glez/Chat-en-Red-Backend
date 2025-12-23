@@ -1,15 +1,15 @@
 package mx.edu.unpa.ChatEnRed.services;
 
+import java.util.List;
 import java.util.Optional;
 
-import mx.edu.unpa.ChatEnRed.domains.Session;
-
+import mx.edu.unpa.ChatEnRed.DTOs.Session.Request.SessionRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Session.Response.SessionResponse;
 
 public interface SessionService {
-	public Iterable<Session> findAll();
-	//public Page<Teacher> findAll(Pageable pageable);
-	public Optional<Session> findById(Integer id);
-	public Session save(Session session);
-	public void deleteById(Integer id);
-
+    List<SessionResponse> findAll();
+    Optional<SessionResponse> findById(Integer id);
+    Optional<SessionResponse> save(SessionRequest request);
+    Optional<Boolean> deleteById(Integer id);
+    Optional<SessionResponse> update(Integer id, SessionRequest request);
 }
