@@ -9,3 +9,4 @@ public class DeviceRequest {
     private String deviceName;
     private String publicKey;
     private LocalDateTime createdAt; 
+}
