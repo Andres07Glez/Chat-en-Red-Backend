@@ -1,6 +1,5 @@
 package mx.edu.unpa.ChatEnRed.controllers;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import mx.edu.unpa.ChatEnRed.domains.Device;
+import mx.edu.unpa.ChatEnRed.DTOs.Device.Request.DeviceRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Device.Response.DeviceResponse;
 import mx.edu.unpa.ChatEnRed.services.DeviceService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
@@ -21,53 +21,40 @@ public class DeviceController {
     private DeviceService deviceService;
 
     @GetMapping(path = "/app")
-    public Iterable<Device> index() {
-        return this.deviceService.findAll();
+    ResponseEntity<List<DeviceResponse>> findAll(){
+    	return Optional.of(this.deviceService.findAll())
+    			.map(ResponseEntity::ok)
+    			.orElseGet(ResponseEntity.notFound()::build);
     }
+    
 
     @GetMapping("/fnd")
-    public ResponseEntity<?> read(@RequestParam("id") Integer deviceId) {
-        Optional<Device> o = this.deviceService.findById(deviceId);
-        if (o.isPresent()) {
-            LinkedList<Device> list = new LinkedList<>();
-            list.add(o.get());
-            return ResponseEntity.ok(list);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Device no encontrado");
-        }
-    }
-
-    // Listar dispositivos de un usuario
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> listByUser(@PathVariable("userId") Integer userId) {
-        List<Device> devices = this.deviceService.findByUserId(userId);
-        return ResponseEntity.ok(devices);
+    public ResponseEntity<DeviceResponse> findById(@RequestParam("id") Integer id) {
+        return deviceService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(ResponseEntity.notFound()::build);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Device> create(@RequestBody Device device) {
-        Device saved = this.deviceService.save(device);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-    }
-
-    @PutMapping("/save")
-    public ResponseEntity<Device> save(@RequestBody Device device) {
-        if (device != null) {
-            Device saved = this.deviceService.save(device);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<DeviceResponse> save(@RequestBody DeviceRequest request) {
+        return deviceService.save(request)
+                .map(resp -> ResponseEntity.ok().body(resp))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     @DeleteMapping("/del/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Integer deviceId) {
-        Optional<Device> o = this.deviceService.findById(deviceId);
-        if (o.isPresent()) {
-            this.deviceService.deleteById(deviceId);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public ResponseEntity<Object> delete(@PathVariable("id") Integer id) {
+        return deviceService.deleteById(id)
+                .map(deleted -> ResponseEntity.noContent().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<DeviceResponse> update(
+            @PathVariable("id") Integer id,
+            @RequestBody DeviceRequest request) {
+        return deviceService.update(id, request)
+                .map(resp -> ResponseEntity.ok().body(resp))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 }

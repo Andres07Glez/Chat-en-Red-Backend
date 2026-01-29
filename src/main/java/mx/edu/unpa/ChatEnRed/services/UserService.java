@@ -1,15 +1,15 @@
 package mx.edu.unpa.ChatEnRed.services;
 
+import java.util.List;
 import java.util.Optional;
 
-import mx.edu.unpa.ChatEnRed.domains.User;
+import mx.edu.unpa.ChatEnRed.DTOs.User.Request.UserRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.User.Response.UserResponse;
 
 public interface UserService {
-	
-	public Iterable<User> findAll();
-	//public Page<Teacher> findAll(Pageable pageable);
-	public Optional<User> findById(Integer id);
-	public User save(User user);
-	public void deleteById(Integer id);
-
+    List<UserResponse> findAll();
+    Optional<UserResponse> findById(Integer id);
+    Optional<UserResponse> save(UserRequest request);
+    Optional<Boolean> deleteById(Integer id);
+    Optional<UserResponse> update(Integer id, UserRequest request);
 }

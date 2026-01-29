@@ -1,15 +1,18 @@
 package mx.edu.unpa.ChatEnRed.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import mx.edu.unpa.ChatEnRed.domains.Attachment;
-
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
 
 public interface AttachmentService {
-
-	public Iterable<Attachment> findAll();
-	//public Page<Teacher> findAll(Pageable pageable);
-	public Optional<Attachment> findById(Integer id);
-	public Attachment save(Attachment attachment);
-	public void deleteById(Integer id);
+    List<AttachmentResponse> findAll();
+    Optional<AttachmentResponse> findById(Integer id);
+    Optional<AttachmentResponse> save(AttachmentRequest request);
+    Optional<Boolean> deleteById(Integer id);
+    Optional<AttachmentResponse> update(Integer id, AttachmentRequest request);
 }
+
+
