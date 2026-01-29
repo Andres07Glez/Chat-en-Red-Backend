@@ -24,7 +24,8 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "conversations", indexes = {
-    @Index(name = "idx_conversations_creator", columnList = "created_by")
+        @Index(name = "idx_conversations_creator", columnList = "created_by"),
+        @Index(name = "idx_conversations_last_msg", columnList = "last_message_at")
 })
 @Getter
 @Setter
@@ -57,10 +58,19 @@ public class Conversation implements Serializable {
     @ToString.Include
     private LocalDateTime createdAt;
 
+    @Column(name = "last_message_at")
+    private LocalDateTime lastMessageAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        // Al crear un grupo nuevo, establece lastMessageAt igual a la fecha de creación.
+        // Esto hace que el chat nuevo aparezca "arriba" en la lista de chats del usuario
+        // inmediatamente, antes de que se envíe el primer mensaje.
+        if (lastMessageAt == null) {
+            lastMessageAt = createdAt;
         }
     }
 }
