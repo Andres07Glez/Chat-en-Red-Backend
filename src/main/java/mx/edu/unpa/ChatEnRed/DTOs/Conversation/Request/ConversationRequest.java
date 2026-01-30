@@ -8,5 +8,4 @@ public class ConversationRequest {
     private Integer conversationTypeId;
     private String title;
     private Integer createdById;
-    private LocalDateTime createdAt; 
-} 
+}
