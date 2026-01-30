@@ -14,5 +14,6 @@ public class MessageRequest {
 	private String content;
 	private LocalDateTime createdAt;
 	private LocalDateTime editedAt;
+	private String iv;
 
 }

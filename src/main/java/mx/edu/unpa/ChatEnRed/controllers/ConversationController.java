@@ -3,6 +3,7 @@ package mx.edu.unpa.ChatEnRed.controllers;
 import java.util.List;
 import java.util.Optional;
 
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,5 +58,14 @@ public class ConversationController {
         return conversationService.update(conversationId, request)
                 .map(resp -> ResponseEntity.ok().body(resp))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+    @GetMapping(path = "/list/{userId}")
+    public ResponseEntity<List<ChatListItemDTO>> getChatList(@PathVariable Integer userId) {
+        // Usamos la misma estructura funcional que tu MessageController
+        return Optional.ofNullable(this.conversationService.getChatList(userId))
+                .filter(list -> !list.isEmpty())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+
     }
 }
