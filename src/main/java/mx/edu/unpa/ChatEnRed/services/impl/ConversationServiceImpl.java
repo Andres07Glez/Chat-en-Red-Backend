@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,5 +106,19 @@ public class ConversationServiceImpl implements ConversationService {
         return Optional.of(existing)
         		.map(conversationRepository::save)
         		.map(conversationMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatListItemDTO> getChatList(Integer userId) {
+        //Validar que el usuario existe
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User not found: " + userId);
+        }
+
+        // Ejecutar la consulta nativa optimizada del Repositorio
+        // Esta consulta ya trae el último mensaje, el contador de no leídos
+        // y ordena por last_message_at DESC.
+        return conversationRepository.findChatListByUserId(userId);
     }
 }

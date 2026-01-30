@@ -14,6 +14,7 @@ public class MessageResponse {
 	private String content;
 	private LocalDateTime createdAt;
 	private LocalDateTime editedAt;
+	private String iv;
  // getters/setters, constructor, builder o Lombok @Data
 }
 

@@ -23,6 +23,6 @@ public interface MessageMapper {
     @Mapping(source="messageType", target= "messageType")
     @Mapping(source = "request.createdAt", target = "createdAt")
     @Mapping(source = "request.editedAt", target = "editedAt")
-
+    @Mapping(source = "request.iv",target = "iv")
     Message toEntity(MessageRequest request,Conversation conversation,User sender,MessageType messageType);
 }

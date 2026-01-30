@@ -1,5 +1,6 @@
 package mx.edu.unpa.ChatEnRed.services.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -60,6 +61,8 @@ public class MessageServiceImpl implements MessageService{
 		// TODO Auto-generated method stub
 		Conversation conversation=this.conversationRepository.findById(request.getConversationId())
 				.orElseThrow(()->new EntityNotFoundException("Conversation not found with id:"+request.getConversationId()));
+		conversation.setLastMessageAt(LocalDateTime.now());
+		this.conversationRepository.save(conversation);
 		User sender =userRepository.findById(request.getSenderId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getSenderId()));
 		
@@ -75,7 +78,11 @@ public class MessageServiceImpl implements MessageService{
 	public Optional<Boolean> deleteById(Integer id) {
 		// TODO Auto-generated method stub
 		return this.messageRepository.findById(id)
-				.map(message->{this.messageRepository.deleteById(id);	
+				//  Borrado Lógico (Soft Delete)
+				// En lugar de borrar la fila, actualizamos deletedAt
+				.map(message->{
+					message.setDeletedAt(LocalDateTime.now());
+					this.messageRepository.save(message);
 				return true;
 				});
 		
@@ -99,6 +106,7 @@ public class MessageServiceImpl implements MessageService{
 	    existing.setSender(sender);
 	    existing.setMessageType(mt);
 	    existing.setContent(dto.getContent());
+		existing.setIv(dto.getIv()); // Si cambia el contenido cifrado, cambia el IV
 
 	    return Optional.of(existing)
 	    		.map(messageRepository::save)
