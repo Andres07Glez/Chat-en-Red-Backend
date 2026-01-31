@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -45,7 +48,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Optional<UserResponse> save(UserRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Error: Username is already taken!");
+        }
         User user = this.userMapper.toEntity(request);
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
         return Optional.of(user)
 				.map(userRepository::save)
@@ -55,11 +62,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Optional<Boolean> deleteById(Integer id) {
-        return userRepository.findById(id)
-                .map(entity -> {
-                    userRepository.deleteById(id);
-                    return true;
-                });
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            return Optional.of(true);
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -67,6 +74,13 @@ public class UserServiceImpl implements UserService {
     public Optional<UserResponse> update(Integer id, UserRequest request) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
+        existing.setEmail(request.getEmail());
+        existing.setUsername(request.getUsername());
+
+        // Solo actualizamos estatus si viene en el request
+        if (request.getIsActive() != null) {
+            existing.setIsActive(request.getIsActive());
+        }
 
         return Optional.of(existing)
 				.map(userRepository::save)

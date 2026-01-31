@@ -7,8 +7,6 @@ import lombok.Data;
 public class UserRequest {
     private String username;
     private String email;
-    private String passwordHash;
+    private String password;
     private Boolean isActive;
-    private LocalDateTime createdAt; // opcional: el servidor puede asignarlo si es null
-    private LocalDateTime lastSeen;  // opcional
 }
