@@ -37,13 +37,7 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElseGet(ResponseEntity.notFound()::build);
     }
-
-    @PostMapping
-    public ResponseEntity<UserResponse> save(@RequestBody UserRequest request) {
-        return userService.save(request)
-                .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
-    }
+    
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") Integer userId) {
