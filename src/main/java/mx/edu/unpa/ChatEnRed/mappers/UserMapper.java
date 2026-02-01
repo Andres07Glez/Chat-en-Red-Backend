@@ -14,6 +14,5 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", ignore = true) // Lo ignoramos aquí para encriptarlo en el Service
-    @Mapping(target = "authorities", ignore = true)
     User toEntity(UserRequest request);
 }
