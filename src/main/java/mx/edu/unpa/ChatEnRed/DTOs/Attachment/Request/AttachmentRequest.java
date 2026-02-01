@@ -12,5 +12,4 @@ public class AttachmentRequest {
 	private Integer size;
 	private String storageUrl;
 	private String checksum;
-	private LocalDateTime createdAt;
 }
