@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
+import mx.edu.unpa.ChatEnRed.repositories.ConversationMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,9 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Autowired
     private ConversationMapper conversationMapper;
+
+    @Autowired
+    private ConversationMemberRepository memberRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -110,15 +114,48 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatListItemDTO> getChatList(Integer userId) {
-        //Validar que el usuario existe
-        if (!userRepository.existsById(userId)) {
-            throw new EntityNotFoundException("User not found: " + userId);
-        }
+    public List<ChatListItemDTO> getMyChatList(String currentUsername) {
 
-        // Ejecutar la consulta nativa optimizada del Repositorio
-        // Esta consulta ya trae el último mensaje, el contador de no leídos
-        // y ordena por last_message_at DESC.
-        return conversationRepository.findChatListByUserId(userId);
+        // 1. Obtener al usuario autenticado
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + currentUsername));
+
+        // 2. Traer las conversaciones desde la BD
+        List<Conversation> conversations = conversationRepository.findConversationsByUserId(currentUser.getId());
+
+        // 3. Transformar Entidad -> DTO con lógica de negocio
+        return conversations.stream().map(conv -> {
+            ChatListItemDTO dto = new ChatListItemDTO();
+
+            // Datos básicos
+            dto.setId(conv.getId());
+            dto.setLastActivity(conv.getLastMessageAt());
+            dto.setUnreadCount(0); // Pendiente para el futuro
+            // dto.setLastMessage("..."); // Pendiente: Requiere consulta a tabla Messages
+
+            // --- LÓGICA CRÍTICA: Determinar Nombre e Icono ---
+            // Usamos el CODE, que es seguro y legible ("GROUP", "DIRECT")
+            String typeCode = conv.getConversationType().getCode();
+            boolean isGroup = "GROUP".equals(typeCode);
+
+            dto.setIsGroup(isGroup);
+
+            if (isGroup) {
+                // Caso A: Es un Grupo -> El nombre es el título del grupo
+                dto.setName(conv.getTitle());
+            } else {
+                // Caso B: Es Directo -> El nombre es el de la OTRA persona
+                User otherUser = memberRepository.findOtherParticipant(conv.getId(), currentUser.getId());
+
+                if (otherUser != null) {
+                    dto.setName(otherUser.getUsername());
+                    // OJO: Si tienes userProfile, aquí usarías otherUser.getProfile().getDisplayName()
+                } else {
+                    dto.setName("Usuario Desconocido"); // Caso borde (usuario eliminado)
+                }
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

@@ -1,21 +1,15 @@
 package mx.edu.unpa.ChatEnRed.DTOs.Conversation;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
-public interface ChatListItemDTO {
-    Integer getConversationId();
-    String getTitle();          // Nombre del grupo o null si es directo
-    String getConversationType(); // 'DIRECT' o 'GROUP'
-
-    // Datos del último mensaje
-    String getLastMessageContent();
-    String getLastMessageIv();     // Necesario para descifrar el snippet en el frontend
-    LocalDateTime getLastMessageTime();
-    String getLastMessageSender(); // Para mostrar "Juan: Hola"
-
-    // Metadatos
-    Long getUnreadCount();
-    Integer getOtherUserId();      // ID del otro usuario (si es chat directo)
-    String getOtherUserName();     // Nombre del otro usuario
-    String getOtherUserAvatar();   // Avatar del otro usuario
+@Data
+public class ChatListItemDTO {
+    private Integer id;             // ID de la conversación
+    private String name;            // Título calculado (Nombre de grupo o del otro usuario)
+    private String lastMessage;     // "Hola..."
+    private LocalDateTime lastActivity; // Para ordenar (lastMessageAt)
+    private Boolean isGroup;        // Para que Angular sepa qué ícono poner
+    private Integer unreadCount;    // (Opcional, lo dejamos en 0 por ahora)
 }

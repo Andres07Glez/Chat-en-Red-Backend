@@ -7,6 +7,7 @@ import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationResponse;
@@ -15,20 +16,26 @@ import mx.edu.unpa.ChatEnRed.services.ConversationService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/conversation")
+@RequestMapping("/conversations")
 public class ConversationController {
 
     @Autowired
     private ConversationService conversationService;
 
-    @GetMapping(path = "/app")
-	ResponseEntity<List<ConversationResponse>> findAll() {
-		return Optional
-                .of(this.conversationService.findAll())
-                .map(ResponseEntity::ok)
-                .orElseGet(ResponseEntity.notFound()::build);
-		
-	}
+    @GetMapping
+    public ResponseEntity<List<ChatListItemDTO>> getMyChats() {
+
+        // SEGURIDAD: Obtenemos el username directamente del Token JWT
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<ChatListItemDTO> chats = conversationService.getMyChatList(username);
+
+        if (chats.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(chats);
+    }
 
     @GetMapping("/fnd")
     public ResponseEntity<ConversationResponse> findById(@RequestParam("id") Integer conversationId) {
@@ -59,13 +66,5 @@ public class ConversationController {
                 .map(resp -> ResponseEntity.ok().body(resp))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
-    @GetMapping(path = "/list/{userId}")
-    public ResponseEntity<List<ChatListItemDTO>> getChatList(@PathVariable Integer userId) {
-        // Usamos la misma estructura funcional que tu MessageController
-        return Optional.ofNullable(this.conversationService.getChatList(userId))
-                .filter(list -> !list.isEmpty())
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
 
-    }
 }

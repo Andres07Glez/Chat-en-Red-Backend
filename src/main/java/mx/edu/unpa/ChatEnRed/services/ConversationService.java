@@ -14,5 +14,5 @@ public interface ConversationService {
     public Optional<ConversationResponse> save(ConversationRequest request);
     public Optional<Boolean> deleteById(Integer id);
     public Optional<ConversationResponse> update(Integer id, ConversationRequest request);
-    List<ChatListItemDTO> getChatList(Integer userId);
+    List<ChatListItemDTO> getMyChatList(String currentUsername);
     }
