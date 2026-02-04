@@ -14,4 +14,5 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
             "WHERE cm.conversation.id = :convId AND cm.user.id <> :myId")
     User findOtherParticipant(@Param("convId") Integer convId, @Param("myId") Integer myId);
 
+    boolean existsByConversationIdAndUserId(Integer conversationId, Integer id);
 }

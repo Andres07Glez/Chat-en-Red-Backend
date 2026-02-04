@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +19,6 @@ import mx.edu.unpa.ChatEnRed.domains.Message;
 import mx.edu.unpa.ChatEnRed.domains.MessageType;
 import mx.edu.unpa.ChatEnRed.domains.User;
 import mx.edu.unpa.ChatEnRed.mappers.MessageMapper;
-import mx.edu.unpa.ChatEnRed.repositories.ConversationRepository;
-import mx.edu.unpa.ChatEnRed.repositories.MessageRepository;
-import mx.edu.unpa.ChatEnRed.repositories.MessageTypeRepository;
-import mx.edu.unpa.ChatEnRed.repositories.UserRepository;
 import mx.edu.unpa.ChatEnRed.services.MessageService;
 
 @Service
@@ -36,6 +34,8 @@ public class MessageServiceImpl implements MessageService{
 	private MessageMapper messageMapper;
 	@Autowired
 	private MessageTypeRepository messageTypeRepository;
+	@Autowired
+	private ConversationMemberRepository memberRepository;
 	
 
 	@Override
@@ -113,5 +113,42 @@ public class MessageServiceImpl implements MessageService{
 				.map(messageMapper::toResponse);
 
 	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<MessageResponse> getChatMessages(Integer conversationId, String currentUsername) {
+
+		// 1. Obtener usuario actual
+		User currentUser = userRepository.findByUsername(currentUsername)
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+		// 2. SEGURIDAD: Verificar que el usuario pertenezca al chat
+		// Nota: Asegúrate de tener este método en ConversationMemberRepository
+		boolean isMember = memberRepository.existsByConversationIdAndUserId(conversationId, currentUser.getId());
+
+		if (!isMember) {
+			throw new AccessDeniedException("No tienes permiso para ver los mensajes de este chat.");
+		}
+
+		// 3. Obtener mensajes de la BD (Cifrados)
+		List<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+
+		// 4. Convertir a DTO y calcular isMine
+		return messages.stream().map(msg -> {
+			MessageResponse dto = messageMapper.toResponse(msg);
+			// Lógica para saber si el mensaje es mío
+			if (msg.getSender() != null) {
+				dto.setMine(msg.getSender().getId().equals(currentUser.getId()));
+			} else {
+				// Mensajes de sistema (ej: "Juan salió del grupo") no son míos
+				dto.setSenderName("Sistema");
+				dto.setMine(false);
+			}
+			// IMPORTANTE: Aquí NO desciframos. Mandamos el content (cifrado) y el iv.
+			return dto;
+		}).collect(Collectors.toList());
+	}
+
 
 }
