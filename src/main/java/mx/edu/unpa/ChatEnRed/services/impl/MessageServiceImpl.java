@@ -55,23 +55,23 @@ public class MessageServiceImpl implements MessageService{
 				.map(messageMapper::toResponse);
 	}
 
-	@Override
-	@Transactional
-	public Optional<MessageResponse> save(MessageRequest request) {
-		// TODO Auto-generated method stub
-		Conversation conversation=this.conversationRepository.findById(request.getConversationId())
-				.orElseThrow(()->new EntityNotFoundException("Conversation not found with id:"+request.getConversationId()));
-		conversation.setLastMessageAt(LocalDateTime.now());
-		this.conversationRepository.save(conversation);
-		User sender =userRepository.findById(request.getSenderId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getSenderId()));
-		
-		MessageType messageType=this.messageTypeRepository.findByCode(request.getMessageTypeCode());
-		Message message=this.messageMapper.toEntity(request, conversation, sender, messageType);
-		return Optional.of(message)
-				.map(messageRepository::save)
-				.map(messageMapper::toResponse);
-	}
+//	@Override
+//	@Transactional
+//	public Optional<MessageResponse> save(MessageRequest request) {
+//		// TODO Auto-generated method stub
+//		Conversation conversation=this.conversationRepository.findById(request.getConversationId())
+//				.orElseThrow(()->new EntityNotFoundException("Conversation not found with id:"+request.getConversationId()));
+//		conversation.setLastMessageAt(LocalDateTime.now());
+//		this.conversationRepository.save(conversation);
+//		User sender =userRepository.findById(request.getSenderId())
+//                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getSenderId()));
+//
+//		MessageType messageType=this.messageTypeRepository.findByCode(request.getMessageTypeCode());
+//		Message message=this.messageMapper.toEntity(request, conversation, sender, messageType);
+//		return Optional.of(message)
+//				.map(messageRepository::save)
+//				.map(messageMapper::toResponse);
+//	}
 
 	@Override
 	@Transactional
@@ -88,31 +88,31 @@ public class MessageServiceImpl implements MessageService{
 		
 	}
 
-	@Override
-	@Transactional
-	public Optional<MessageResponse> update(Integer id, MessageRequest dto) {
-		// TODO Auto-generated method stub
-		Message existing = messageRepository.findById(id)
-	            .orElseThrow(() -> new EntityNotFoundException("Message not found: " + id));
-
-		Conversation conv = conversationRepository.findById(dto.getConversationId())
-	            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
-	    MessageType mt = messageTypeRepository.findByCode(dto.getMessageTypeCode());
-
-	    User sender =userRepository.findById(dto.getSenderId())
-	    		.orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-	    existing.setConversation(conv);
-	    existing.setSender(sender);
-	    existing.setMessageType(mt);
-	    existing.setContent(dto.getContent());
-		existing.setIv(dto.getIv()); // Si cambia el contenido cifrado, cambia el IV
-
-	    return Optional.of(existing)
-	    		.map(messageRepository::save)
-				.map(messageMapper::toResponse);
-
-	}
+//	@Override
+//	@Transactional
+//	public Optional<MessageResponse> update(Integer id, MessageRequest dto) {
+//		// TODO Auto-generated method stub
+//		Message existing = messageRepository.findById(id)
+//	            .orElseThrow(() -> new EntityNotFoundException("Message not found: " + id));
+//
+//		Conversation conv = conversationRepository.findById(dto.getConversationId())
+//	            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+//	    MessageType mt = messageTypeRepository.findByCode(dto.getMessageTypeCode());
+//
+//	    User sender =userRepository.findById(dto.getSenderId())
+//	    		.orElseThrow(() -> new EntityNotFoundException("User not found"));
+//
+//	    existing.setConversation(conv);
+//	    existing.setSender(sender);
+//	    existing.setMessageType(mt);
+//	    existing.setContent(dto.getContent());
+//		existing.setIv(dto.getIv()); // Si cambia el contenido cifrado, cambia el IV
+//
+//	    return Optional.of(existing)
+//	    		.map(messageRepository::save)
+//				.map(messageMapper::toResponse);
+//
+//	}
 
 
 	@Override
@@ -148,6 +148,53 @@ public class MessageServiceImpl implements MessageService{
 			// IMPORTANTE: Aquí NO desciframos. Mandamos el content (cifrado) y el iv.
 			return dto;
 		}).collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional
+	public MessageResponse sendMessage(MessageRequest request, String username) {
+
+		// 1. Obtener usuario (Remitente)
+		User sender = userRepository.findByUsername(username)
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+		// 2. Obtener conversación
+		Conversation conversation = conversationRepository.findById(request.getConversationId()) // Asumiendo que inyectaste ConversationRepository
+				.orElseThrow(() -> new EntityNotFoundException("Conversación no encontrada"));
+
+		// 3. SEGURIDAD: Verificar membresía
+		boolean isMember = memberRepository.existsByConversationIdAndUserId(conversation.getId(), sender.getId());
+		if (!isMember) {
+			throw new AccessDeniedException("No puedes enviar mensajes a este chat.");
+		}
+
+		// 4. Obtener Tipo de Mensaje (TEXT por defecto)
+		String typeCode = request.getMessageTypeCode() != null ? request.getMessageTypeCode() : "TEXT";
+		MessageType msgType = messageTypeRepository.findByCode(typeCode)
+				.orElseThrow(() -> new EntityNotFoundException("Tipo de mensaje inválido"));
+
+		// 5. Mapear DTO -> Entidad (Usando tu Mapper existente)
+		// Nota: request.setCreatedAt(LocalDateTime.now()) si tu mapper lo requiere explícitamente,
+		// pero tu entidad tiene @PrePersist, así que está cubierto.
+		Message newMessage = messageMapper.toEntity(request, conversation, sender, msgType);
+
+		// Aseguramos contenido y IV (simulación de cifrado por ahora)
+		newMessage.setContent(request.getContent());
+		newMessage.setIv(request.getIv());
+
+		// 6. Guardar
+		Message savedMessage = messageRepository.save(newMessage);
+
+		// 7. Actualizar "Last Message" en la conversación (Para que suba en la lista de chats)
+		conversation.setLastMessageAt(savedMessage.getCreatedAt());
+		conversationRepository.save(conversation);
+
+		// 8. Convertir a Respuesta
+		MessageResponse response = messageMapper.toResponse(savedMessage);
+		response.setMine(true); // Acabamos de enviarlo, así que es mío
+		response.setSenderName(sender.getUsername());
+
+		return response;
 	}
 
 

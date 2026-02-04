@@ -19,6 +19,7 @@ public class MessageResponse {
 	private String content; // Aquí viajará el Cifrado (Base64)
 	private String iv;      // Aquí viajará el IV (Base64)
 
+	@JsonProperty("sentAt")
 	private LocalDateTime createdAt;
 	private LocalDateTime editedAt;
 }

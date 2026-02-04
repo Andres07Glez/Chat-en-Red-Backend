@@ -5,8 +5,10 @@ import org.springframework.stereotype.Repository;
 
 import mx.edu.unpa.ChatEnRed.domains.MessageType;
 
+import java.util.Optional;
+
 @Repository
 public interface MessageTypeRepository extends JpaRepository<MessageType,Integer>{
-	MessageType findByCode(String code);
+	Optional<MessageType> findByCode(String code);
 
 }
