@@ -6,7 +6,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
-import mx.edu.unpa.ChatEnRed.repositories.ConversationMemberRepository;
+import mx.edu.unpa.ChatEnRed.domains.Message;
+import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +20,6 @@ import mx.edu.unpa.ChatEnRed.domains.Conversation;
 import mx.edu.unpa.ChatEnRed.domains.ConversationType;
 import mx.edu.unpa.ChatEnRed.domains.User;
 import mx.edu.unpa.ChatEnRed.mappers.ConversationMapper;
-import mx.edu.unpa.ChatEnRed.repositories.ConversationRepository;
-import mx.edu.unpa.ChatEnRed.repositories.ConversationTypeRepository;
-import mx.edu.unpa.ChatEnRed.repositories.UserRepository;
 import mx.edu.unpa.ChatEnRed.services.ConversationService;
 
 @Service
@@ -41,6 +39,8 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Autowired
     private ConversationMemberRepository memberRepository;
+    @Autowired
+    private MessageRepository messageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -126,18 +126,25 @@ public class ConversationServiceImpl implements ConversationService {
         // 3. Transformar Entidad -> DTO con lógica de negocio
         return conversations.stream().map(conv -> {
             ChatListItemDTO dto = new ChatListItemDTO();
-
             // Datos básicos
             dto.setId(conv.getId());
             dto.setLastActivity(conv.getLastMessageAt());
             dto.setUnreadCount(0); // Pendiente para el futuro
             // dto.setLastMessage("..."); // Pendiente: Requiere consulta a tabla Messages
+            Message lastMsg = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conv.getId());
+            if (lastMsg != null) {
+                // NOTA: Si implementamos cifrado después, aquí vendrá texto cifrado.
+                // El frontend se encargará de descifrarlo o mostraremos "Mensaje cifrado".
+                // Por ahora (texto plano) lo mandamos directo.
+                dto.setLastMessage(lastMsg.getContent());
+            } else {
+                dto.setLastMessage(""); // Chat vacío
+            }
 
             // --- LÓGICA CRÍTICA: Determinar Nombre e Icono ---
             // Usamos el CODE, que es seguro y legible ("GROUP", "DIRECT")
             String typeCode = conv.getConversationType().getCode();
             boolean isGroup = "GROUP".equals(typeCode);
-
             dto.setIsGroup(isGroup);
 
             if (isGroup) {
@@ -146,13 +153,7 @@ public class ConversationServiceImpl implements ConversationService {
             } else {
                 // Caso B: Es Directo -> El nombre es el de la OTRA persona
                 User otherUser = memberRepository.findOtherParticipant(conv.getId(), currentUser.getId());
-
-                if (otherUser != null) {
-                    dto.setName(otherUser.getUsername());
-                    // OJO: Si tienes userProfile, aquí usarías otherUser.getProfile().getDisplayName()
-                } else {
-                    dto.setName("Usuario Desconocido"); // Caso borde (usuario eliminado)
-                }
+                dto.setName(otherUser != null ? otherUser.getUsername() : "Usuario Desconocido");
             }
 
             return dto;
