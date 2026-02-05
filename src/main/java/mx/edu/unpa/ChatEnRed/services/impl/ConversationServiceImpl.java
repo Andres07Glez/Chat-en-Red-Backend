@@ -137,6 +137,7 @@ public class ConversationServiceImpl implements ConversationService {
                 // El frontend se encargará de descifrarlo o mostraremos "Mensaje cifrado".
                 // Por ahora (texto plano) lo mandamos directo.
                 dto.setLastMessage(lastMsg.getContent());
+                dto.setLastMessageIV(lastMsg.getIv());
             } else {
                 dto.setLastMessage(""); // Chat vacío
             }
