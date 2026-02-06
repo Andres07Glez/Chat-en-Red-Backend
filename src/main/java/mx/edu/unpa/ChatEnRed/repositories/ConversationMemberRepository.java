@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import mx.edu.unpa.ChatEnRed.domains.ConversationMember;
 
+import java.util.List;
+
 @Repository
 public interface ConversationMemberRepository extends JpaRepository<ConversationMember, Integer> {
     @Query("SELECT cm.user FROM ConversationMember cm " +
@@ -15,4 +17,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     User findOtherParticipant(@Param("convId") Integer convId, @Param("myId") Integer myId);
 
     boolean existsByConversationIdAndUserId(Integer conversationId, Integer id);
+
+    @Query("SELECT m.user.id FROM ConversationMember m WHERE m.conversation.id = :chatId")
+    List<Integer> findUserIdsByConversationId(@Param("chatId") Integer conversationId);
 }

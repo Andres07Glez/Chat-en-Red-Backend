@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,8 @@ public class MessageServiceImpl implements MessageService{
 	private MessageTypeRepository messageTypeRepository;
 	@Autowired
 	private ConversationMemberRepository memberRepository;
+	@Autowired
+	private SimpMessagingTemplate messagingTemplate;
 	
 
 	@Override
@@ -191,8 +194,35 @@ public class MessageServiceImpl implements MessageService{
 
 		// 8. Convertir a Respuesta
 		MessageResponse response = messageMapper.toResponse(savedMessage);
-		response.setMine(true); // Acabamos de enviarlo, así que es mío
+		// --- AQUÍ EMPIEZA LO NUEVO (BROADCAST) ---
+
+		// A. Configurar nombre del remitente
 		response.setSenderName(sender.getUsername());
+
+		// B. Preparamos el mensaje para el WebSocket
+		// Importante: Para el que recibe el mensaje por WS, 'mine' es false por defecto.
+		// (El frontend comparará IDs si es necesario, pero enviémoslo como false para asegurar que salga a la izquierda en el receptor)
+		response.setMine(false);
+
+		// 1. ENVIAR A LA SALA (Ya lo tienes)
+		String chatDestination = "/topic/chat/" + request.getConversationId();
+		messagingTemplate.convertAndSend(chatDestination, response);
+
+		// 2. Obtener todos los miembros de esta conversación
+		List<Integer> memberIds = memberRepository.findUserIdsByConversationId(request.getConversationId());
+
+		for (Integer userId : memberIds) {
+			// Canal personal: /topic/user/{userId}
+			String userDestination = "/topic/user/" + userId;
+
+			// Enviamos el mismo response. El frontend decidirá qué hacer con él.
+			// Nota: El contenido va cifrado, el frontend deberá descifrarlo para el preview.
+			messagingTemplate.convertAndSend(userDestination, response);
+		}
+
+		// F. Ajuste final para la respuesta HTTP (Para ti mismo, que acabas de enviar)
+		// Esto es para que en TU pantalla actual salga verde (derecha) inmediatamente.
+		response.setMine(true);
 
 		return response;
 	}
