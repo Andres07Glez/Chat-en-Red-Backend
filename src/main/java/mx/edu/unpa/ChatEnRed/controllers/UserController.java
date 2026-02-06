@@ -15,48 +15,43 @@ import mx.edu.unpa.ChatEnRed.services.UserService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-	@GetMapping(path = "/app")
+	@GetMapping
 	ResponseEntity<List<UserResponse>> findAll() {
-		return Optional
-                .of(this.userService.findAll())
-                .map(ResponseEntity::ok)
-                .orElseGet(ResponseEntity.notFound()::build);
+        List<UserResponse> users = userService.findAll();
+        if (users.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(users);
 		
 	}
 
-    @GetMapping("/fnd")
-    public ResponseEntity<UserResponse> findById(@RequestParam("id") Integer userId) {
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> findById(@PathVariable Integer userId) {
         return userService.findById(userId)
                 .map(ResponseEntity::ok)
                 .orElseGet(ResponseEntity.notFound()::build);
     }
+    
 
-    @PostMapping("/create")
-    public ResponseEntity<UserResponse> save(@RequestBody UserRequest request) {
-        return userService.save(request)
-                .map(resp -> ResponseEntity.ok().body(resp))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
-    }
-
-    @DeleteMapping("/del/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") Integer userId) {
         return userService.deleteById(userId)
                 .map(deleted -> ResponseEntity.noContent().build())
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
             @PathVariable("id") Integer userId,
             @RequestBody UserRequest request) {
         return userService.update(userId, request)
-                .map(resp -> ResponseEntity.ok().body(resp))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

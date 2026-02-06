@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,7 @@ import mx.edu.unpa.ChatEnRed.services.MessageService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/message")
+@RequestMapping("/messages")
 public class MessageController {
 	@Autowired
 	private MessageService messageService;
@@ -44,13 +45,11 @@ public class MessageController {
 				.map(ResponseEntity::ok)
 				.orElseGet(ResponseEntity.notFound()::build);
 	}
-	
-	@PostMapping("/create")
-	public ResponseEntity<MessageResponse> save( @RequestBody MessageRequest request) {
-		
-		return this.messageService.save(request)
-				.map(mss->ResponseEntity.ok().body(mss))
-				.orElseGet(()->ResponseEntity.badRequest().build());
+
+	@PostMapping
+	public ResponseEntity<MessageResponse> sendMessage(@RequestBody MessageRequest request) {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		return ResponseEntity.ok(messageService.sendMessage(request, username));
 	}
 	
 	@DeleteMapping("/del/{id}")
@@ -71,16 +70,23 @@ public class MessageController {
 		}
 	}*/
 	
-	@PutMapping("/update/{id}")
-	public ResponseEntity<MessageResponse> update(
-			@PathVariable(value="id") Integer messageId,
-			@RequestBody MessageRequest request) {
-		
-		return this.messageService.update(messageId,request)
-				.map(mss->ResponseEntity.ok().body(mss))
-				.orElseGet(()->ResponseEntity.badRequest().build());
-		
-		
+//	@PutMapping("/update/{id}")
+//	public ResponseEntity<MessageResponse> update(
+//			@PathVariable(value="id") Integer messageId,
+//			@RequestBody MessageRequest request) {
+//
+//		return this.messageService.update(messageId,request)
+//				.map(mss->ResponseEntity.ok().body(mss))
+//				.orElseGet(()->ResponseEntity.badRequest().build());
+//
+//
+//	}
+	@GetMapping("/{conversationId}")
+	public ResponseEntity<List<MessageResponse>> getMessages(@PathVariable Integer conversationId) {
+		// Obtenemos el usuario del Token
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		List<MessageResponse> messages = messageService.getChatMessages(conversationId, username);
+		return ResponseEntity.ok(messages);
 	}
 
 }

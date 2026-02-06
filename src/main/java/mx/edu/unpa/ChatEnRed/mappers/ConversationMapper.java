@@ -19,9 +19,7 @@ public interface ConversationMapper {
 	ConversationResponse toResponse (Conversation entity);
 	
 	@Mapping(target= "id", ignore= true)
-	@Mapping(source="request.createdAt", target="CreatedAt")
-	@Mapping(source="request.updatedAt", target="updatedAt")
-	@Mapping(source="conversationType", target ="conversationType")
+	@Mapping(source="convType", target ="conversationType")
 	@Mapping(source="createdBy", target="createdBy")
 	Conversation toEntity(ConversationRequest request, ConversationType convType, User createdBy);
 }

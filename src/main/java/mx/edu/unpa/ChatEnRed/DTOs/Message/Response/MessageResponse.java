@@ -2,6 +2,7 @@ package mx.edu.unpa.ChatEnRed.DTOs.Message.Response;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -9,12 +10,18 @@ public class MessageResponse {
 	private Integer id;
 	private Integer conversationId;
 	private Integer senderId;
-	//private String senderUsername; // opcional
+	// AGREGADO: Necesario para mostrar "Maria" encima de la burbuja
+	private String senderName;
 	private String messageTypeCode;
-	private String content;
+	// AGREGADO: Fundamental para el CSS (true = derecha, false = izquierda)
+	@JsonProperty("isMine")
+	private boolean mine;
+	private String content; // Aquí viajará el Cifrado (Base64)
+	private String iv;      // Aquí viajará el IV (Base64)
+
+	@JsonProperty("sentAt")
 	private LocalDateTime createdAt;
 	private LocalDateTime editedAt;
- // getters/setters, constructor, builder o Lombok @Data
 }
 
 

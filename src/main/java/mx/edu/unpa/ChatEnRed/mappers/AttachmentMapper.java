@@ -14,7 +14,7 @@ public interface AttachmentMapper {
     AttachmentResponse toResponse(Attachment entity);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(source = "request.createdAt", target = "createdAt")
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(source = "message", target = "message")
     Attachment toEntity(AttachmentRequest request, Message message);
 }

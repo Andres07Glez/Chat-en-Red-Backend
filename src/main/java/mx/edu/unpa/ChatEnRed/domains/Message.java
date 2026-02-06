@@ -59,12 +59,17 @@ public class Message implements Serializable{
     private MessageType messageType;
 
     /**
-     * Texto plano o ciphertext. Usamos @Lob / TEXT para permitir contenido largo.
-     * Si el ciphertext fuera binario (bytes), considera usar byte[] con @Lob.
+     * Contiene el ciphertext en Base64.
+     * Usamos 'TEXT' de MySQL (64KB). Si esperas mensajes encriptados MUY largos,
+     * cambia columnDefinition a "LONGTEXT".
      */
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT",nullable = false)
     private String content;
+
+    // Es crítico guardarlo para poder descifrar el mensaje después.
+    @Column(length = 50)
+    private String iv;
 
     @Column(name = "created_at", nullable = false)
     @ToString.Include
@@ -73,6 +78,11 @@ public class Message implements Serializable{
     @Column(name = "edited_at")
     @ToString.Include
     private LocalDateTime editedAt;
+
+    //  Para borrado lógico (Soft Delete)
+    // Si este campo tiene valor, el mensaje se considera eliminado.
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -83,7 +93,13 @@ public class Message implements Serializable{
 
     @PreUpdate
     protected void onUpdate() {
-        editedAt = LocalDateTime.now();
+        // Si haces un "soft delete" (actualizas deletedAt), JPA disparará este @PreUpdate
+        // y cambiará también el editedAt.
+        // Si quieres evitar eso, tendrás que manejar el 'editedAt' manualmente en tu Servicio
+        // o usar una lógica condicional aquí (aunque @PreUpdate no sabe qué campo cambió).
+        if (deletedAt == null) {
+            editedAt = LocalDateTime.now();
+        }
     }
 	
 	
