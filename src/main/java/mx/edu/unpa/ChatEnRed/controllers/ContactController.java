@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
@@ -21,13 +22,21 @@ public class ContactController {
     @Autowired
     private ContactService contactService;
 
-    @GetMapping(path= "/app")
+    /*@GetMapping(path= "/app")
 	ResponseEntity<List<ContactResponse>> findAll() {
 		return Optional
         		.of(this.contactService.findAll())
         		.map(ResponseEntity::ok)
         		.orElseGet(ResponseEntity.notFound()::build);
-        }
+        }*/
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ContactResponse>> myContacts(Authentication auth) {
+        return ResponseEntity.ok(
+                contactService.findByOwnerUsername(auth.getName())
+        );
+    }
+
 
     @GetMapping("/fnd")
     public ResponseEntity<ContactResponse> findById(@RequestParam("id") Integer contactId) {
@@ -36,12 +45,25 @@ public class ContactController {
                 .orElseGet(ResponseEntity.notFound()::build);
     }
 
-    @PostMapping("/create")
+    /*@PostMapping("/create")
     public ResponseEntity<ContactResponse> save(@RequestBody ContactRequest request) {
         return contactService.save(request)
                 .map(resp -> ResponseEntity.ok().body(resp))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
+    }*/
+
+    @PostMapping("/create")
+    public ResponseEntity<ContactResponse> save(
+            @RequestBody ContactRequest request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return contactService.save(request, email)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
+
 
     @DeleteMapping("/del/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") Integer contactId) {
@@ -58,4 +80,20 @@ public class ContactController {
                 .map(resp -> ResponseEntity.ok().body(resp))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
+
+    // =====================================================
+    // Enviar o reenviar solicitud de contacto
+    // =====================================================
+    @PostMapping("/request")
+    public ResponseEntity<ContactResponse> sendContactRequest(
+            @RequestParam("username") String targetUsername,
+            Authentication authentication
+    ) {
+        String requesterUsername = authentication.getName();
+
+        return contactService.sendOrResendRequest(requesterUsername, targetUsername)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
 }
