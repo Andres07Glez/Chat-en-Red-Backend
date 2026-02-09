@@ -79,6 +79,8 @@ public class User implements Serializable {
     @Column(name = "last_seen")
     @ToString.Include
     private LocalDateTime lastSeen;
+    @Column(name = "public_key", columnDefinition = "TEXT")
+    private String publicKey;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfile profile;

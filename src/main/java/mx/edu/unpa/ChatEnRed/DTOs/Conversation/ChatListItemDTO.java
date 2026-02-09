@@ -12,4 +12,7 @@ public class ChatListItemDTO {
     private LocalDateTime lastActivity; // Para ordenar (lastMessageAt)
     private Boolean isGroup;        // Para que Angular sepa qué ícono poner
     private Integer unreadCount;    // (Opcional, lo dejamos en 0 por ahora)
+    private String lastMessageIV;
+    private Integer otherUserId;
+    private String otherUserPublicKey;
 }

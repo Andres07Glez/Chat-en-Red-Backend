@@ -80,6 +80,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()  // Login DEBE ser público
                         .requestMatchers("/error").permitAll()    // Errores de Spring públicos
+                        .requestMatchers("/ws-chat/**").permitAll()
                         .anyRequest().authenticated()             // Todo lo demás privado
                 );
 
