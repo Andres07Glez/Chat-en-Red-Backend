@@ -61,6 +61,9 @@ public class ConversationMember implements Serializable{
     @ToString.Include
     private LocalDateTime joinedAt;
 
+    @Column(name = "last_read_at")
+    private LocalDateTime lastReadAt;
+
     @PrePersist
     protected void onCreate() {
         if (joinedAt == null) {

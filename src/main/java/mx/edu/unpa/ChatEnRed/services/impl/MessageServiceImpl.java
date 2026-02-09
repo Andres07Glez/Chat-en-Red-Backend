@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import mx.edu.unpa.ChatEnRed.domains.*;
 import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,10 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.MessageRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.MessageResponse;
-import mx.edu.unpa.ChatEnRed.domains.Conversation;
-import mx.edu.unpa.ChatEnRed.domains.Message;
-import mx.edu.unpa.ChatEnRed.domains.MessageType;
-import mx.edu.unpa.ChatEnRed.domains.User;
 import mx.edu.unpa.ChatEnRed.mappers.MessageMapper;
 import mx.edu.unpa.ChatEnRed.services.MessageService;
 
@@ -119,7 +116,7 @@ public class MessageServiceImpl implements MessageService{
 
 
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public List<MessageResponse> getChatMessages(Integer conversationId, String currentUsername) {
 
 		// 1. Obtener usuario actual
@@ -136,6 +133,11 @@ public class MessageServiceImpl implements MessageService{
 
 		// 3. Obtener mensajes de la BD (Cifrados)
 		List<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+		ConversationMember member = memberRepository.findByConversationIdAndUserId(conversationId, currentUser.getId())
+				.orElseThrow(() -> new AccessDeniedException("No eres miembro"));
+
+		member.setLastReadAt(LocalDateTime.now());
+		memberRepository.save(member);
 
 		// 4. Convertir a DTO y calcular isMine
 		return messages.stream().map(msg -> {

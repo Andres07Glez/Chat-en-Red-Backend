@@ -76,6 +76,8 @@ public class User implements Serializable {
     @Column(name = "last_seen")
     @ToString.Include
     private LocalDateTime lastSeen;
+    @Column(name = "public_key", columnDefinition = "TEXT")
+    private String publicKey;
 
     @PrePersist
     protected void onCreate() {

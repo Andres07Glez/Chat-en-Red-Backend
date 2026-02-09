@@ -66,5 +66,11 @@ public class ConversationController {
                 .map(resp -> ResponseEntity.ok().body(resp))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
+    @PostMapping("/{conversationId}/read")
+    public ResponseEntity<Void> markConversationAsRead(@PathVariable Integer conversationId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        conversationService.markAsRead(conversationId, username);
+        return ResponseEntity.ok().build();
+    }
 
 }

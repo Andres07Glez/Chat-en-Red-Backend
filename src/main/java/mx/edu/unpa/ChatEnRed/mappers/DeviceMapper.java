@@ -17,5 +17,6 @@ public interface DeviceMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "request.createdAt", target = "createdAt")
     @Mapping(source = "user", target = "user")
+    @Mapping(source = "request.publicKey", target = "publicKey")
     Device toEntity(DeviceRequest request, User user);
 }

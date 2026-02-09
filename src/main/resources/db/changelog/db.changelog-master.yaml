@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changes/001-initial-schema.sql
   - include:
       file: db/changelog/changes/002-initial-data.sql
+  - include:
+      file: db/changelog/changes/003-security-fields.sql
+  - include:
+      file: db/changelog/changes/004-group-keys.sql
