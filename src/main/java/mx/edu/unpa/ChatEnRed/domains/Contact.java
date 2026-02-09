@@ -76,9 +76,19 @@ public class Contact implements Serializable{
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-	
-	
-	
-	
+
+    public static Contact create(
+            User owner,
+            User contactUser,
+            ContactStatus status
+    ) {
+        Contact contact = new Contact();
+        contact.owner = owner;
+        contact.contactUser = contactUser;
+        contact.contactStatus = status;
+        contact.createdAt = LocalDateTime.now();
+        contact.updatedAt = LocalDateTime.now();
+        return contact;
+    }
 
 }

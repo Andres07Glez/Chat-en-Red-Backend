@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class ContactRequest {
-    private Integer ownerId;
+    //private Integer ownerId;
     private Integer contactUserId;
     private Integer contactStatusId;
     private LocalDateTime createdAt; 

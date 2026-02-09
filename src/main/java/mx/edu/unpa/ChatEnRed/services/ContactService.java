@@ -7,9 +7,22 @@ import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
 
 public interface ContactService {
-    List<ContactResponse> findAll();
+    //List<ContactResponse> findAll();
     Optional<ContactResponse> findById(Integer id);
-    Optional<ContactResponse> save(ContactRequest request);
+    //Se agrego owner email
+    Optional<ContactResponse> save(ContactRequest request, String ownerEmail);
     Optional<Boolean> deleteById(Integer id);
     Optional<ContactResponse> update(Integer id, ContactRequest request);
+    //nuevo
+    List<ContactResponse> findByOwnerUsername(String userName);
+
+    // =====================================================
+    // Enviar o reenviar solicitud de contacto
+    // =====================================================
+    Optional<ContactResponse> sendOrResendRequest(
+            String requesterUsername,
+            String targetUsername
+    );
+
+
 }
