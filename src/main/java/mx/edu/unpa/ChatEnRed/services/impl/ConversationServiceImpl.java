@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.GroupMemberKeyDTO;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
 import mx.edu.unpa.ChatEnRed.domains.*;
 import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +43,10 @@ public class ConversationServiceImpl implements ConversationService {
     private ConversationMemberRepository memberRepository;
     @Autowired
     private MessageRepository messageRepository;
+    @Autowired
+    private ConversationKeyRepository conversationKeyRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional(readOnly = true)
@@ -58,7 +66,7 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     @Transactional
     public Optional<ConversationResponse> save(ConversationRequest request) {
-    	
+
         ConversationType ct = this.conversationTypeRepository.findById(request.getConversationTypeId())
                 .orElseThrow(() -> new EntityNotFoundException("ConversationType not found with id: " + request.getConversationTypeId()));
 
@@ -69,10 +77,10 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         Conversation conversation = conversationMapper.toEntity(request, ct, createdBy);
-        
+
         return Optional.of(conversation)
-				.map(conversationRepository::save)
-				.map(conversationMapper::toResponse);
+                .map(conversationRepository::save)
+                .map(conversationMapper::toResponse);
     }
 
     @Override
@@ -106,8 +114,8 @@ public class ConversationServiceImpl implements ConversationService {
         // if (request.getCreatedAt() != null) existing.setCreatedAt(request.getCreatedAt());
 
         return Optional.of(existing)
-        		.map(conversationRepository::save)
-        		.map(conversationMapper::toResponse);
+                .map(conversationRepository::save)
+                .map(conversationMapper::toResponse);
     }
 
     @Override
@@ -192,5 +200,63 @@ public class ConversationServiceImpl implements ConversationService {
         // Actualizamos la fecha a "AHORA MISMO"
         member.setLastReadAt(LocalDateTime.now());
         memberRepository.save(member);
+    }
+
+    @Override
+    @Transactional
+    public void createGroup(CreateGroupRequest request, String creatorUsername) {
+
+        // 1. Obtener al creador (Query real a BD)
+        User creator = userRepository.findByUsername(creatorUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario creador no encontrado"));
+
+        // 2. Obtener referencias (Proxies) para los catálogos fijos
+        // No hace SELECT a la BD, solo crea un objeto con el ID puesto.
+        ConversationType groupType = entityManager.getReference(ConversationType.class, 2); // 2 = GROUP
+        RoleStatus ownerRole = entityManager.getReference(RoleStatus.class, 3); // 3 = OWNER
+        RoleStatus memberRole = entityManager.getReference(RoleStatus.class, 1); // 1 = MEMBER
+
+        // 3. Crear la Conversación usando BUILDER
+        Conversation conversation = Conversation.builder()
+                .title(request.getTitle())
+                .createdBy(creator)
+                .conversationType(groupType) // Asignamos el proxy
+                // createdAt y lastMessageAt se llenan solos con @PrePersist o los pones aquí
+                .build();
+
+        conversation = conversationRepository.save(conversation);
+
+        // 4. Procesar Miembros
+        for (GroupMemberKeyDTO memberDto : request.getMembers()) {
+
+            // Si el miembro es el creador, ya tenemos el objeto 'creator', si no, buscamos
+            User memberUser;
+            if (memberDto.getUserId().equals(creator.getId())) {
+                memberUser = creator;
+            } else {
+                memberUser = userRepository.findById(memberDto.getUserId())
+                        .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+            }
+
+            // A. Crear Miembro con BUILDER
+            ConversationMember membership = ConversationMember.builder()
+                    .conversation(conversation)
+                    .user(memberUser)
+                    .roleStatus(memberUser.getId().equals(creator.getId()) ? ownerRole : memberRole)
+                    .joinedAt(LocalDateTime.now())
+                    .build();
+
+            memberRepository.save(membership);
+
+            // B. Guardar Llave (Sender Key) con BUILDER
+            ConversationKey conversationKey = ConversationKey.builder()
+                    .conversation(conversation)
+                    .user(memberUser)
+                    .encryptedKey(memberDto.getEncryptedKey())
+                    .iv(memberDto.getIv())
+                    .build();
+
+            conversationKeyRepository.save(conversationKey);
+        }
     }
 }

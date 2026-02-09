@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,6 +72,12 @@ public class ConversationController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         conversationService.markAsRead(conversationId, username);
         return ResponseEntity.ok().build();
+    }
+    @PostMapping("/group")
+    public ResponseEntity<Void> createGroup(@RequestBody CreateGroupRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        conversationService.createGroup(request, username);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
 }
