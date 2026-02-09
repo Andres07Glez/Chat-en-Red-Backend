@@ -19,6 +19,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
 
 
 @Entity
@@ -76,6 +79,9 @@ public class User implements Serializable {
     @Column(name = "last_seen")
     @ToString.Include
     private LocalDateTime lastSeen;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserProfile profile;
 
     @PrePersist
     protected void onCreate() {

@@ -1,12 +1,10 @@
 package mx.edu.unpa.ChatEnRed.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-
 import mx.edu.unpa.ChatEnRed.domains.ContactStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
 
-@Repository
-public interface ContactStatusRepository extends JpaRepository<ContactStatus, Integer>{
-
+public interface ContactStatusRepository extends JpaRepository<ContactStatus, Integer> {
+    // Añade esto para que el Service pueda buscar por "PENDING" o "ACCEPTED"
+    Optional<ContactStatus> findByCode(String code);
 }

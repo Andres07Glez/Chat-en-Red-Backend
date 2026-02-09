@@ -1,13 +1,14 @@
+// ContactRequest.java (CORREGIDO)
 package mx.edu.unpa.ChatEnRed.DTOs.Contact.Request;
 
-import java.time.LocalDateTime;
 import lombok.Data;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 public class ContactRequest {
-    private Integer ownerId;
+    @NotNull(message = "El ID del usuario contacto es requerido")
     private Integer contactUserId;
-    private Integer contactStatusId;
-    private LocalDateTime createdAt; 
-    private LocalDateTime updatedAt; 
+    // NO incluir ownerId - se obtiene del usuario autenticado
+    // NO incluir contactStatusId - siempre empieza como PENDING
+    // NO incluir fechas - el servidor las genera
 }

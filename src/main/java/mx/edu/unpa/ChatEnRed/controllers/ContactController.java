@@ -1,61 +1,59 @@
 package mx.edu.unpa.ChatEnRed.controllers;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
+import mx.edu.unpa.ChatEnRed.services.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
-import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
-import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
-import mx.edu.unpa.ChatEnRed.services.ContactService;
+import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/contact")
+@RequestMapping("/contacts")
+@RequiredArgsConstructor // Inyección automática
 public class ContactController {
 
-    @Autowired
-    private ContactService contactService;
+    private final ContactService contactService;
 
-    @GetMapping(path= "/app")
-	ResponseEntity<List<ContactResponse>> findAll() {
-		return Optional
-        		.of(this.contactService.findAll())
-        		.map(ResponseEntity::ok)
-        		.orElseGet(ResponseEntity.notFound()::build);
-        }
+    // --- TUS MÉTODOS PARA LA VISTA DE SOLICITUDES ---
 
-    @GetMapping("/fnd")
-    public ResponseEntity<ContactResponse> findById(@RequestParam("id") Integer contactId) {
-        return contactService.findById(contactId)
-                .map(ResponseEntity::ok)
-                .orElseGet(ResponseEntity.notFound()::build);
+    // Obtener solicitudes que yo envié
+    @GetMapping("/requests/sent/{userId}")
+    public ResponseEntity<List<ContactResponse>> getSentRequests(@PathVariable Integer userId) {
+        return ResponseEntity.ok(contactService.getSentRequests(userId));
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<ContactResponse> save(@RequestBody ContactRequest request) {
+    // Obtener solicitudes que me llegaron
+    @GetMapping("/requests/received/{userId}")
+    public ResponseEntity<List<ContactResponse>> getReceivedRequests(@PathVariable Integer userId) {
+        return ResponseEntity.ok(contactService.getReceivedRequests(userId));
+    }
+
+    // Aceptar una solicitud (Cambiamos de Post a Patch porque es una actualización parcial)
+    @PatchMapping("/requests/{contactId}/accept")
+    public ResponseEntity<ContactResponse> acceptRequest(
+            @PathVariable Integer contactId,
+            @RequestParam Integer userId) {
+        return ResponseEntity.ok(contactService.acceptRequest(contactId, userId));
+    }
+
+    // Rechazar o eliminar solicitud
+    @DeleteMapping("/requests/{contactId}")
+    public ResponseEntity<Void> rejectRequest(
+            @PathVariable Integer contactId,
+            @RequestParam Integer userId) {
+        contactService.rejectOrDeleteRequest(contactId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- MÉTODO PARA TU AMIGO (Enviar solicitud) ---
+
+    @PostMapping("/send-request")
+    public ResponseEntity<ContactResponse> sendContactRequest(@RequestBody ContactRequest request) {
         return contactService.save(request)
-                .map(resp -> ResponseEntity.ok().body(resp))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
-    }
-
-    @DeleteMapping("/del/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") Integer contactId) {
-        return contactService.deleteById(contactId)
-                .map(deleted -> ResponseEntity.noContent().build())
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-    }
-
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ContactResponse> update(
-            @PathVariable("id") Integer contactId,
-            @RequestBody ContactRequest request) {
-        return contactService.update(contactId, request)
-                .map(resp -> ResponseEntity.ok().body(resp))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp))
+                .orElse(ResponseEntity.badRequest().build());
     }
 }

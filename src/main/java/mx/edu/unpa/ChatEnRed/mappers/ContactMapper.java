@@ -1,26 +1,51 @@
 package mx.edu.unpa.ChatEnRed.mappers;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-
-import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
 import mx.edu.unpa.ChatEnRed.domains.Contact;
 import mx.edu.unpa.ChatEnRed.domains.User;
-import mx.edu.unpa.ChatEnRed.domains.ContactStatus;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring")
+import java.time.LocalDateTime;
+
+// componentModel = "spring" permite inyectarlo con @Autowired o constructores
+@Mapper(componentModel = "spring", imports = {LocalDateTime.class})
 public interface ContactMapper {
 
-    @Mapping(source = "owner.id", target = "ownerId")
-    @Mapping(source = "contactUser.id", target = "contactUserId")
-    @Mapping(source = "contactStatus.id", target = "contactStatusId")
-    ContactResponse toResponse(Contact entity);
+    // ---------------------------------------------------------
+    // 1. Método MÁGICO para crear el Espejo
+    // ---------------------------------------------------------
+    @Mapping(target = "id", ignore = true) // Nuevo ID autogenerado
+    @Mapping(source = "contactUser", target = "owner") // Intercambiamos: El que recibió ahora es dueño
+    @Mapping(source = "owner", target = "contactUser") // Intercambiamos: El dueño ahora es contacto
+    @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())") // Fecha nueva
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "contactStatus", source = "contactStatus") // Mantiene el status (ACCEPTED)
+    Contact createMirror(Contact originalRequest);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(source = "request.createdAt", target = "createdAt")
-    @Mapping(source = "owner", target = "owner")
-    @Mapping(source = "contactUser", target = "contactUser")
-    @Mapping(source = "contactStatus", target = "contactStatus")
-    Contact toEntity(ContactRequest request, User owner, User contactUser, ContactStatus contactStatus);
+
+    // ---------------------------------------------------------
+    // 2. Tu método toResponse (Lo mantenemos como default)
+    // ---------------------------------------------------------
+    // Como MapStruct es una interfaz, para lógica compleja usamos 'default'
+    default ContactResponse toResponse(Contact contact, Integer currentUserId) {
+        if (contact == null) return null;
+
+        User otherUser = contact.getOwner().getId().equals(currentUserId)
+                ? contact.getContactUser()
+                : contact.getOwner();
+
+        return ContactResponse.builder()
+                .id(contact.getId())
+                .otherUserId(otherUser.getId())
+                .otherDisplayName(otherUser.getProfile() != null ?
+                        otherUser.getProfile().getDisplayName() : otherUser.getUsername())
+                .otherAvatarUrl(otherUser.getProfile() != null ?
+                        otherUser.getProfile().getAvatarUrl() : null)
+                .statusLabel(contact.getContactStatus().getLabel())
+                .statusCode(contact.getContactStatus().getCode())
+                .createdAt(contact.getCreatedAt())
+                .build();
+    }
 }
