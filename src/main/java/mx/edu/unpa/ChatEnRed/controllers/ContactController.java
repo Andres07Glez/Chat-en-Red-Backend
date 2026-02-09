@@ -16,7 +16,7 @@ import mx.edu.unpa.ChatEnRed.services.ContactService;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
-@RequestMapping("/contact")
+@RequestMapping("/contacts")
 public class ContactController {
 
     @Autowired
