@@ -17,4 +17,8 @@ public interface ContactRepository extends JpaRepository<Contact, Integer>{
 
     //nuevo
     Optional<Contact> findByOwnerAndContactUser(User owner, User contactUser);
+
+    // Relación B → A (solicitud entrante)
+    Optional<Contact> findByContactUserAndOwner(User contactUser, User owner);
+
 }
