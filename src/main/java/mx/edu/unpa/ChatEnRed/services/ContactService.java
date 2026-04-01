@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactLookupResponse;
 import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
 
 public interface ContactService {
@@ -23,6 +24,12 @@ public interface ContactService {
             String requesterUsername,
             String targetUsername
     );
+
+    Optional<ContactLookupResponse> lookupContactRelation(
+            String ownerUsername,
+            String targetUsername
+    );
+
 
 
 }
