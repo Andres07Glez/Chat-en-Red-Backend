@@ -8,6 +8,6 @@ public class ContactRequest {
     //private Integer ownerId;
     private Integer contactUserId;
     private Integer contactStatusId;
-    private LocalDateTime createdAt; 
-    private LocalDateTime updatedAt; 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
