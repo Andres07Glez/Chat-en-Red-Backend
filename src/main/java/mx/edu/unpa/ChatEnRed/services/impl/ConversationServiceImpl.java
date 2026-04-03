@@ -259,4 +259,65 @@ public class ConversationServiceImpl implements ConversationService {
             conversationKeyRepository.save(conversationKey);
         }
     }
+
+    @Override
+    public ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId) {
+        // 1. Resolver usuarios
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + currentUsername));
+
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario destino no encontrado: " + targetUserId));
+
+        // 2. Buscar si ya existe una conversación DIRECT entre los dos
+        Optional<Conversation> existing = conversationRepository
+                .findDirectConversationBetweenUsers(currentUser.getId(), targetUser.getId());
+
+        Conversation conversation;
+
+        if (existing.isPresent()) {
+            // Ya existe → la reutilizamos
+            conversation = existing.get();
+        } else {
+            // No existe → crear conversación tipo DIRECT (ID = 1) con ambos miembros
+            ConversationType directType = entityManager.getReference(ConversationType.class, 1);
+            RoleStatus memberRole  = entityManager.getReference(RoleStatus.class, 1);
+
+            conversation = Conversation.builder()
+                    .conversationType(directType)
+                    .createdBy(currentUser)
+                    .build();
+            conversation = conversationRepository.save(conversation);
+
+            memberRepository.save(ConversationMember.builder()
+                    .conversation(conversation).user(currentUser)
+                    .roleStatus(memberRole).joinedAt(LocalDateTime.now()).build());
+
+            memberRepository.save(ConversationMember.builder()
+                    .conversation(conversation).user(targetUser)
+                    .roleStatus(memberRole).joinedAt(LocalDateTime.now()).build());
+        }
+
+        // 3. Construir el DTO que necesita Angular para abrir el ChatWindow
+        ChatListItemDTO dto = new ChatListItemDTO();
+        dto.setId(conversation.getId());
+        dto.setName(targetUser.getUsername());
+        dto.setIsGroup(false);
+        dto.setOtherUserId(targetUser.getId());
+        dto.setOtherUserPublicKey(targetUser.getPublicKey());
+        dto.setUnreadCount(0);
+        dto.setLastActivity(conversation.getLastMessageAt());
+
+        // Incluir último mensaje si ya hay historial (conversación reutilizada)
+        Message lastMsg = messageRepository
+                .findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
+        if (lastMsg != null) {
+            dto.setLastMessage(lastMsg.getContent());
+            dto.setLastMessageIV(lastMsg.getIv());
+        } else {
+            dto.setLastMessage("");
+        }
+
+        return dto;
+    }
 }

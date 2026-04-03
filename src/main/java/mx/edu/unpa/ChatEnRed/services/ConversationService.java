@@ -17,6 +17,6 @@ public interface ConversationService {
     public Optional<ConversationResponse> update(Integer id, ConversationRequest request);
     List<ChatListItemDTO> getMyChatList(String currentUsername);
     void markAsRead(Integer conversationId, String username);
-
     void createGroup(CreateGroupRequest request, String username);
+    ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId);
 }

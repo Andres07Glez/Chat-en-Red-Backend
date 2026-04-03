@@ -8,6 +8,7 @@ import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,6 +79,15 @@ public class ConversationController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         conversationService.createGroup(request, username);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    @PostMapping("/direct")
+    public ResponseEntity<ChatListItemDTO> startDirectConversation(
+            @RequestParam("targetUserId") Integer targetUserId,
+            Authentication auth
+    ) {
+        ChatListItemDTO dto = conversationService
+                .findOrCreateDirectConversation(auth.getName(), targetUserId);
+        return ResponseEntity.ok(dto);
     }
 
 }
