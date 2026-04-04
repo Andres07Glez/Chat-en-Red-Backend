@@ -27,4 +27,7 @@ public class ContactResponse {
     // --- Metadatos ---
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Agrega esta propiedad a tu clase ContactResponse
+    private String contactEmail;
 }
