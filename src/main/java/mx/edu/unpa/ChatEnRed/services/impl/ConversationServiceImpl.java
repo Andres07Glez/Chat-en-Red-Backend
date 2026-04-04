@@ -10,6 +10,7 @@ import jakarta.persistence.PersistenceContext;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.GroupMemberKeyDTO;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationKeyResponse;
 import mx.edu.unpa.ChatEnRed.domains.*;
 import mx.edu.unpa.ChatEnRed.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,19 +27,14 @@ import mx.edu.unpa.ChatEnRed.services.ConversationService;
 
 @Service
 public class ConversationServiceImpl implements ConversationService {
-
     @Autowired
     private ConversationRepository conversationRepository;
-
     @Autowired
     private ConversationTypeRepository conversationTypeRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private ConversationMapper conversationMapper;
-
     @Autowired
     private ConversationMemberRepository memberRepository;
     @Autowired
@@ -66,21 +62,14 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     @Transactional
     public Optional<ConversationResponse> save(ConversationRequest request) {
+        ConversationType ct = conversationTypeRepository.findById(request.getConversationTypeId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "ConversationType not found: " + request.getConversationTypeId()));
 
-        ConversationType ct = this.conversationTypeRepository.findById(request.getConversationTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("ConversationType not found with id: " + request.getConversationTypeId()));
+        User createdBy = resolveUser(request.getCreatedById());
+        Conversation conv = conversationMapper.toEntity(request, ct, createdBy);
 
-        User createdBy = null;
-        if (request.getCreatedById() != null) {
-            createdBy = userRepository.findById(request.getCreatedById())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getCreatedById()));
-        }
-
-        Conversation conversation = conversationMapper.toEntity(request, ct, createdBy);
-
-        return Optional.of(conversation)
-                .map(conversationRepository::save)
-                .map(conversationMapper::toResponse);
+        return Optional.of(conversationRepository.save(conv)).map(conversationMapper::toResponse);
     }
 
     @Override
@@ -100,223 +89,225 @@ public class ConversationServiceImpl implements ConversationService {
                 .orElseThrow(() -> new EntityNotFoundException("Conversation not found: " + id));
 
         ConversationType ct = conversationTypeRepository.findById(request.getConversationTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("ConversationType not found with id: " + request.getConversationTypeId()));
-
-        User createdBy = null;
-        if (request.getCreatedById() != null) {
-            createdBy = userRepository.findById(request.getCreatedById())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getCreatedById()));
-        }
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "ConversationType not found: " + request.getConversationTypeId()));
 
         existing.setConversationType(ct);
         existing.setTitle(request.getTitle());
-        existing.setCreatedBy(createdBy);
-        // if (request.getCreatedAt() != null) existing.setCreatedAt(request.getCreatedAt());
+        existing.setCreatedBy(resolveUser(request.getCreatedById()));
 
-        return Optional.of(existing)
-                .map(conversationRepository::save)
-                .map(conversationMapper::toResponse);
+        return Optional.of(conversationRepository.save(existing)).map(conversationMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ChatListItemDTO> getMyChatList(String currentUsername) {
-        User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + currentUsername));
-
+        User currentUser = findUserByUsername(currentUsername);
         List<Conversation> conversations = conversationRepository.findConversationsByUserId(currentUser.getId());
 
-        return conversations.stream().map(conv -> {
-            ChatListItemDTO dto = new ChatListItemDTO();
-
-            dto.setId(conv.getId());
-            dto.setLastActivity(conv.getLastMessageAt());
-
-            // Mapeo del último mensaje y su IV
-            Message lastMsg = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conv.getId());
-            if (lastMsg != null) {
-                dto.setLastMessage(lastMsg.getContent());
-                dto.setLastMessageIV(lastMsg.getIv()); // <--- Asegúrate de que el DTO tenga este campo también
-            } else {
-                dto.setLastMessage("");
-            }
-
-            // --- LÓGICA DE NOMBRE Y LLAVES ---
-            String typeCode = conv.getConversationType().getCode(); // Asumiendo que getConversationType() no es null
-            boolean isGroup = "GROUP".equals(typeCode);
-            dto.setIsGroup(isGroup);
-
-            if (isGroup) {
-                // Caso Grupo: Nombre del grupo, SIN llave pública (por ahora)
-                dto.setName(conv.getTitle());
-                dto.setOtherUserPublicKey(null); // Explicitamente null en grupos
-            } else {
-                // Caso Directo: Nombre del otro usuario Y SU LLAVE PÚBLICA
-                User otherUser = memberRepository.findOtherParticipant(conv.getId(), currentUser.getId());
-
-                if (otherUser != null) {
-                    dto.setName(otherUser.getUsername());
-                    // === AQUÍ ESTÁ EL CAMBIO CLAVE ===
-                    dto.setOtherUserPublicKey(otherUser.getPublicKey());
-                    dto.setOtherUserId(otherUser.getId());
-                } else {
-                    dto.setName("Usuario Desconocido");
-                    dto.setOtherUserPublicKey(null);
-                }
-            }
-
-            // --- LÓGICA DE NO LEÍDOS (Tu código existente) ---
-            ConversationMember member = memberRepository.findByConversationIdAndUserId(conv.getId(), currentUser.getId())
-                    .orElse(null);
-            long unread = 0;
-            if (member != null) {
-                if (member.getLastReadAt() != null) {
-                    unread = messageRepository.countByConversationIdAndCreatedAtAfterAndSenderIdNot(
-                            conv.getId(),
-                            member.getLastReadAt(),
-                            currentUser.getId());// <--- Excluir mis propios mensajes
-                } else {
-                    // Si nunca entré, cuento todo lo que no sea mío
-                    unread = messageRepository.countByConversationIdAndSenderIdNot(
-                            conv.getId(),
-                            currentUser.getId());
-                }
-            }
-            dto.setUnreadCount((int) unread);
-
-            return dto;
-        }).collect(Collectors.toList());
+        return conversations.stream()
+                .map(conv -> buildChatListItemDTO(conv, currentUser))
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void markAsRead(Integer conversationId, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
-        ConversationMember member = memberRepository.findByConversationIdAndUserId(conversationId, user.getId())
+        User user = findUserByUsername(username);
+        ConversationMember member = memberRepository
+                .findByConversationIdAndUserId(conversationId, user.getId())
                 .orElseThrow(() -> new AccessDeniedException("No eres miembro de este chat"));
 
-        // Actualizamos la fecha a "AHORA MISMO"
         member.setLastReadAt(LocalDateTime.now());
         memberRepository.save(member);
     }
 
     @Override
     @Transactional
-    public void createGroup(CreateGroupRequest request, String creatorUsername) {
+    public ChatListItemDTO createGroup(CreateGroupRequest request, String creatorUsername) {
 
-        // 1. Obtener al creador (Query real a BD)
-        User creator = userRepository.findByUsername(creatorUsername)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario creador no encontrado"));
+        User creator = findUserByUsername(creatorUsername);
 
-        // 2. Obtener referencias (Proxies) para los catálogos fijos
-        // No hace SELECT a la BD, solo crea un objeto con el ID puesto.
-        ConversationType groupType = entityManager.getReference(ConversationType.class, 2); // 2 = GROUP
-        RoleStatus ownerRole = entityManager.getReference(RoleStatus.class, 3); // 3 = OWNER
-        RoleStatus memberRole = entityManager.getReference(RoleStatus.class, 1); // 1 = MEMBER
+        // IDs fijos de catálogos (se sincronizan con Liquibase)
+        ConversationType groupType = entityManager.getReference(ConversationType.class, 2); // GROUP
+        RoleStatus ownerRole       = entityManager.getReference(RoleStatus.class, 3);       // OWNER
+        RoleStatus memberRole      = entityManager.getReference(RoleStatus.class, 1);       // MEMBER
 
-        // 3. Crear la Conversación usando BUILDER
-        Conversation conversation = Conversation.builder()
-                .title(request.getTitle())
-                .createdBy(creator)
-                .conversationType(groupType) // Asignamos el proxy
-                // createdAt y lastMessageAt se llenan solos con @PrePersist o los pones aquí
-                .build();
+        // 1. Crear conversación
+        Conversation conversation = conversationRepository.save(
+                Conversation.builder()
+                        .title(request.getTitle())
+                        .createdBy(creator)
+                        .conversationType(groupType)
+                        .build()
+        );
 
-        conversation = conversationRepository.save(conversation);
-
-        // 4. Procesar Miembros
+        // 2. Crear miembro + llave cifrada por cada participante
         for (GroupMemberKeyDTO memberDto : request.getMembers()) {
+            User memberUser = memberDto.getUserId().equals(creator.getId())
+                    ? creator
+                    : userRepository.findById(memberDto.getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Usuario no encontrado: " + memberDto.getUserId()));
 
-            // Si el miembro es el creador, ya tenemos el objeto 'creator', si no, buscamos
-            User memberUser;
-            if (memberDto.getUserId().equals(creator.getId())) {
-                memberUser = creator;
-            } else {
-                memberUser = userRepository.findById(memberDto.getUserId())
-                        .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-            }
+            boolean isCreator = memberUser.getId().equals(creator.getId());
 
-            // A. Crear Miembro con BUILDER
-            ConversationMember membership = ConversationMember.builder()
+            memberRepository.save(ConversationMember.builder()
                     .conversation(conversation)
                     .user(memberUser)
-                    .roleStatus(memberUser.getId().equals(creator.getId()) ? ownerRole : memberRole)
+                    .roleStatus(isCreator ? ownerRole : memberRole)
                     .joinedAt(LocalDateTime.now())
-                    .build();
+                    .build());
 
-            memberRepository.save(membership);
-
-            // B. Guardar Llave (Sender Key) con BUILDER
-            ConversationKey conversationKey = ConversationKey.builder()
+            conversationKeyRepository.save(ConversationKey.builder()
                     .conversation(conversation)
                     .user(memberUser)
                     .encryptedKey(memberDto.getEncryptedKey())
                     .iv(memberDto.getIv())
-                    .build();
-
-            conversationKeyRepository.save(conversationKey);
+                    .build());
         }
+
+        // 3. Devolver DTO listo para abrir el ChatWindow
+        ChatListItemDTO dto = new ChatListItemDTO();
+        dto.setId(conversation.getId());
+        dto.setName(request.getTitle());
+        dto.setIsGroup(true);
+        dto.setOtherUserId(null);
+        dto.setOtherUserPublicKey(null);
+        dto.setUnreadCount(0);
+        dto.setLastActivity(conversation.getLastMessageAt());
+        dto.setLastMessage("");
+
+        return dto;
+    }
+    // ── Chat directo (find or create) ─────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId) {
+        User currentUser = findUserByUsername(currentUsername);
+        User targetUser  = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario destino no encontrado: " + targetUserId));
+
+        Conversation conversation = conversationRepository
+                .findDirectConversationBetweenUsers(currentUser.getId(), targetUser.getId())
+                .orElseGet(() -> createDirectConversation(currentUser, targetUser));
+
+        return buildDirectChatDTO(conversation, targetUser);
     }
 
     @Override
-    public ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId) {
-        // 1. Resolver usuarios
-        User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + currentUsername));
+    @Transactional(readOnly = true)
+    public ConversationKeyResponse getMyConversationKey(Integer conversationId, String username) {
+        User user = findUserByUsername(username);
 
-        User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario destino no encontrado: " + targetUserId));
+        ConversationKey myKey = conversationKeyRepository
+                .findWithCreatorByConversationIdAndUserId(conversationId, user.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró la llave del grupo para conversationId= " + conversationId + ", usuario=" + username));
 
-        // 2. Buscar si ya existe una conversación DIRECT entre los dos
-        Optional<Conversation> existing = conversationRepository
-                .findDirectConversationBetweenUsers(currentUser.getId(), targetUser.getId());
-
-        Conversation conversation;
-
-        if (existing.isPresent()) {
-            // Ya existe → la reutilizamos
-            conversation = existing.get();
-        } else {
-            // No existe → crear conversación tipo DIRECT (ID = 1) con ambos miembros
-            ConversationType directType = entityManager.getReference(ConversationType.class, 1);
-            RoleStatus memberRole  = entityManager.getReference(RoleStatus.class, 1);
-
-            conversation = Conversation.builder()
-                    .conversationType(directType)
-                    .createdBy(currentUser)
-                    .build();
-            conversation = conversationRepository.save(conversation);
-
-            memberRepository.save(ConversationMember.builder()
-                    .conversation(conversation).user(currentUser)
-                    .roleStatus(memberRole).joinedAt(LocalDateTime.now()).build());
-
-            memberRepository.save(ConversationMember.builder()
-                    .conversation(conversation).user(targetUser)
-                    .roleStatus(memberRole).joinedAt(LocalDateTime.now()).build());
+        // La llave fue cifrada con ECDH(creador_privada, miembro_pública).
+        // Para descifrarla, el cliente necesita la pública del creador.
+        User creator = myKey.getConversation().getCreatedBy();
+        if (creator == null) {
+            throw new EntityNotFoundException("La conversación " + conversationId + " no tiene creador definido");
         }
 
-        // 3. Construir el DTO que necesita Angular para abrir el ChatWindow
+        return new ConversationKeyResponse(
+                myKey.getEncryptedKey(),
+                myKey.getIv(),
+                creator.getPublicKey()
+        );
+    }
+    // ── Helpers privados ──────────────────────────────────────────────────────
+
+    private User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + username));
+    }
+
+    private User resolveUser(Integer userId) {
+        if (userId == null) return null;
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+    }
+
+    private Conversation createDirectConversation(User userA, User userB) {
+        ConversationType directType = entityManager.getReference(ConversationType.class, 1);
+        RoleStatus memberRole       = entityManager.getReference(RoleStatus.class, 1);
+
+        Conversation conv = conversationRepository.save(Conversation.builder()
+                .conversationType(directType)
+                .createdBy(userA)
+                .build());
+
+        memberRepository.save(ConversationMember.builder()
+                .conversation(conv).user(userA).roleStatus(memberRole)
+                .joinedAt(LocalDateTime.now()).build());
+
+        memberRepository.save(ConversationMember.builder()
+                .conversation(conv).user(userB).roleStatus(memberRole)
+                .joinedAt(LocalDateTime.now()).build());
+
+        return conv;
+    }
+
+    private ChatListItemDTO buildDirectChatDTO(Conversation conversation, User otherUser) {
         ChatListItemDTO dto = new ChatListItemDTO();
         dto.setId(conversation.getId());
-        dto.setName(targetUser.getUsername());
+        dto.setName(otherUser.getUsername());
         dto.setIsGroup(false);
-        dto.setOtherUserId(targetUser.getId());
-        dto.setOtherUserPublicKey(targetUser.getPublicKey());
+        dto.setOtherUserId(otherUser.getId());
+        dto.setOtherUserPublicKey(otherUser.getPublicKey());
         dto.setUnreadCount(0);
         dto.setLastActivity(conversation.getLastMessageAt());
 
-        // Incluir último mensaje si ya hay historial (conversación reutilizada)
         Message lastMsg = messageRepository
                 .findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
-        if (lastMsg != null) {
-            dto.setLastMessage(lastMsg.getContent());
-            dto.setLastMessageIV(lastMsg.getIv());
+        dto.setLastMessage(lastMsg != null ? lastMsg.getContent() : "");
+        dto.setLastMessageIV(lastMsg != null ? lastMsg.getIv() : null);
+
+        return dto;
+    }
+
+    private ChatListItemDTO buildChatListItemDTO(Conversation conv, User currentUser) {
+        ChatListItemDTO dto = new ChatListItemDTO();
+        dto.setId(conv.getId());
+        dto.setLastActivity(conv.getLastMessageAt());
+
+        Message lastMsg = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conv.getId());
+        dto.setLastMessage(lastMsg != null ? lastMsg.getContent() : "");
+        dto.setLastMessageIV(lastMsg != null ? lastMsg.getIv() : null);
+
+        boolean isGroup = "GROUP".equals(conv.getConversationType().getCode());
+        dto.setIsGroup(isGroup);
+
+        if (isGroup) {
+            dto.setName(conv.getTitle());
+            dto.setOtherUserPublicKey(null);
         } else {
-            dto.setLastMessage("");
+            User other = memberRepository.findOtherParticipant(conv.getId(), currentUser.getId());
+            if (other != null) {
+                dto.setName(other.getUsername());
+                dto.setOtherUserPublicKey(other.getPublicKey());
+                dto.setOtherUserId(other.getId());
+            } else {
+                dto.setName("Usuario Desconocido");
+            }
         }
+
+        ConversationMember member = memberRepository
+                .findByConversationIdAndUserId(conv.getId(), currentUser.getId()).orElse(null);
+
+        long unread = 0;
+        if (member != null) {
+            unread = (member.getLastReadAt() != null)
+                    ? messageRepository.countByConversationIdAndCreatedAtAfterAndSenderIdNot(
+                    conv.getId(), member.getLastReadAt(), currentUser.getId())
+                    : messageRepository.countByConversationIdAndSenderIdNot(
+                    conv.getId(), currentUser.getId());
+        }
+        dto.setUnreadCount((int) unread);
 
         return dto;
     }

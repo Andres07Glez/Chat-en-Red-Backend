@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationKeyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,17 +27,12 @@ public class ConversationController {
 
     @GetMapping
     public ResponseEntity<List<ChatListItemDTO>> getMyChats() {
-
         // SEGURIDAD: Obtenemos el username directamente del Token JWT
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
         List<ChatListItemDTO> chats = conversationService.getMyChatList(username);
-
-        if (chats.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok(chats);
+        return chats.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(chats);
     }
 
     @GetMapping("/fnd")
@@ -75,19 +71,28 @@ public class ConversationController {
         return ResponseEntity.ok().build();
     }
     @PostMapping("/group")
-    public ResponseEntity<Void> createGroup(@RequestBody CreateGroupRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        conversationService.createGroup(request, username);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<ChatListItemDTO> createGroup(
+            @RequestBody CreateGroupRequest request,
+            Authentication auth) {
+        ChatListItemDTO dto = conversationService.createGroup(request, auth.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
     @PostMapping("/direct")
     public ResponseEntity<ChatListItemDTO> startDirectConversation(
             @RequestParam("targetUserId") Integer targetUserId,
             Authentication auth
     ) {
-        ChatListItemDTO dto = conversationService
-                .findOrCreateDirectConversation(auth.getName(), targetUserId);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(
+                conversationService.findOrCreateDirectConversation(auth.getName(), targetUserId)
+        );
+    }
+    @GetMapping("/{conversationId}/my-key")
+    public ResponseEntity<ConversationKeyResponse> getMyConversationKey(
+            @PathVariable Integer conversationId,
+            Authentication auth) {
+        return ResponseEntity.ok(
+                conversationService.getMyConversationKey(conversationId, auth.getName())
+        );
     }
 
 }

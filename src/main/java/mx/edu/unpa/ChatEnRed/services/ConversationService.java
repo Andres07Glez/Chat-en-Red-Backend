@@ -6,6 +6,7 @@ import java.util.Optional;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.ChatListItemDTO;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.ConversationRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.CreateGroupRequest;
+import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationKeyResponse;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationResponse;
 import mx.edu.unpa.ChatEnRed.domains.Conversation;
 
@@ -17,6 +18,8 @@ public interface ConversationService {
     public Optional<ConversationResponse> update(Integer id, ConversationRequest request);
     List<ChatListItemDTO> getMyChatList(String currentUsername);
     void markAsRead(Integer conversationId, String username);
-    void createGroup(CreateGroupRequest request, String username);
+    ChatListItemDTO  createGroup(CreateGroupRequest request, String creatorUsername);
     ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId);
+    ConversationKeyResponse getMyConversationKey(Integer conversationId, String username);
+
 }
