@@ -83,12 +83,35 @@ public class ContactServiceImpl implements ContactService {
                 .map(contactMapper::toResponse);
     }
 
-    @Override
+    /*@Override
     @Transactional
     public Optional<Boolean> deleteById(Integer id) {
         return contactRepository.findById(id)
                 .map(contact -> {
                     contactRepository.deleteById(id);
+                    return true;
+                });
+    }*/
+
+    @Override
+    @Transactional
+    public Optional<Boolean> deleteById(Integer id) {
+        return contactRepository.findById(id)
+                .map(contact -> {
+                    // 1. Obtenemos el estado REMOVED (id=4) usando tu helper existente
+                    ContactStatus removedStatus = getRejectedStatus();
+
+                    // 2. Buscamos el registro espejo (B -> A) y lo actualizamos
+                    contactRepository.findByOwnerAndContactUser(contact.getContactUser(), contact.getOwner())
+                            .ifPresent(mirrorContact -> {
+                                mirrorContact.setContactStatus(removedStatus);
+                                contactRepository.save(mirrorContact);
+                            });
+
+                    // 3. Actualizamos el registro original (A -> B)
+                    contact.setContactStatus(removedStatus);
+                    contactRepository.save(contact);
+
                     return true;
                 });
     }
@@ -117,13 +140,26 @@ public class ContactServiceImpl implements ContactService {
                 .map(contactMapper::toResponse);
     }
 
-    @Override
+    /*@Override
     @Transactional(readOnly = true)
     public List<ContactResponse> findByOwnerUsername(String username) {
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         return contactRepository.findByOwner(owner)
+                .stream()
+                .map(contactMapper::toResponse)
+                .toList();
+    }*/
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContactResponse> findByOwnerUsername(String username) {
+        User owner = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Utilizamos tu método del repositorio para traer SOLAMENTE los aceptados
+        return contactRepository.findByOwnerIdAndContactStatusCode(owner.getId(), CODE_ACCEPTED)
                 .stream()
                 .map(contactMapper::toResponse)
                 .toList();

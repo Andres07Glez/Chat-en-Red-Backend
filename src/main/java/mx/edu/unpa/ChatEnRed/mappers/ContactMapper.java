@@ -22,6 +22,9 @@ public interface ContactMapper {
     // CORRECCIÓN: Usamos 'label' en lugar de 'name'
     @Mapping(source = "contactStatus.label", target = "contactStatusName")
 
+    // 👇 AGREGA ESTA LÍNEA PARA EL CORREO 👇
+    @Mapping(source = "contactUser.email", target = "contactEmail")
+
     // Ignoramos estos para llenarlos manualmente abajo
     @Mapping(target = "contactName", ignore = true)
     @Mapping(target = "contactAvatarUrl", ignore = true)
