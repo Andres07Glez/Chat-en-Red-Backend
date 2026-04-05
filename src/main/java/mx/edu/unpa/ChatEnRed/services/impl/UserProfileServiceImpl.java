@@ -76,6 +76,17 @@ public class UserProfileServiceImpl implements UserProfileService {
         UserProfile existing = userProfileRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("UserProfile not found for userId: " + userId));
 
+        // FIX: Aplicar los valores del request a la entidad existente
+        if (request.getDisplayName() != null) {
+            existing.setDisplayName(request.getDisplayName().isBlank() ? null : request.getDisplayName().trim());
+        }
+        if (request.getBio() != null) {
+            existing.setBio(request.getBio().isBlank() ? null : request.getBio().trim());
+        }
+        if (request.getAvatarUrl() != null) {
+            existing.setAvatarUrl(request.getAvatarUrl());
+        }
+
         return Optional.of(existing)
 				.map(userProfileRepository::save)
 				.map(userProfileMapper::toResponse);

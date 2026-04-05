@@ -25,7 +25,7 @@ import lombok.ToString;
 @Table(name = "user_profiles")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // constructor requerido por JPA
+@NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
