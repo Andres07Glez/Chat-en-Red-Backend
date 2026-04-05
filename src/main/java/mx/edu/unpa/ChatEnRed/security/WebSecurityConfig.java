@@ -16,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
@@ -63,7 +62,8 @@ public class WebSecurityConfig {
                 // 2. Configurar CORS explícitamente para permitir peticiones desde Angular/Postman
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:8181")); // Angular y Localhost
+                    //corsConfig.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:8181")); // Angular y Localhost
+                    corsConfig.setAllowedOriginPatterns(List.of("*"));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
                     corsConfig.setAllowedHeaders(List.of("*"));
                     corsConfig.setAllowCredentials(true);

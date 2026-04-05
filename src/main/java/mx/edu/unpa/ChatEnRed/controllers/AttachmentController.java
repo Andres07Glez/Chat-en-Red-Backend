@@ -11,7 +11,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Request.AttachmentRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Attachment.Response.AttachmentResponse;
 import mx.edu.unpa.ChatEnRed.services.AttachmentService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/attachment")
 public class AttachmentController {

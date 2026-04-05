@@ -16,7 +16,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Contact.Request.ContactRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Contact.Response.ContactResponse;
 import mx.edu.unpa.ChatEnRed.services.ContactService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/contacts")
 public class ContactController {

@@ -17,7 +17,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Response.ConversationResponse;
 import mx.edu.unpa.ChatEnRed.DTOs.Conversation.Request.ConversationRequest;
 import mx.edu.unpa.ChatEnRed.services.ConversationService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/conversations")
 public class ConversationController {

@@ -12,7 +12,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Request.UserProfileRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.UserProfile.Response.UserProfileResponse;
 import mx.edu.unpa.ChatEnRed.services.UserProfileService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/user-profile")
 public class UserProfileController {

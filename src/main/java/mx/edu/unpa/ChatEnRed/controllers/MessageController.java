@@ -22,7 +22,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Message.Request.MessageRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Message.Response.MessageResponse;
 import mx.edu.unpa.ChatEnRed.services.MessageService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/messages")
 public class MessageController {

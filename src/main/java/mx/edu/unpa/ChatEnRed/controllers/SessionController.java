@@ -12,7 +12,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Session.Request.SessionRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Session.Response.SessionResponse;
 import mx.edu.unpa.ChatEnRed.services.SessionService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/session")
 public class SessionController {

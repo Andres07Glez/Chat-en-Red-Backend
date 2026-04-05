@@ -23,7 +23,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.User.Request.UserRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.User.Response.UserResponse;
 import mx.edu.unpa.ChatEnRed.services.UserService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/users")
 public class UserController {

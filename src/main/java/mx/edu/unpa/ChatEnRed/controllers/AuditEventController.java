@@ -12,7 +12,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.AuditEvent.Request.AuditEventRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.AuditEvent.Response.AuditEventResponse;
 import mx.edu.unpa.ChatEnRed.services.AuditEventService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/audit-event")
 public class AuditEventController {

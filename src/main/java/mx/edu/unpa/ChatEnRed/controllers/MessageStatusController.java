@@ -13,7 +13,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.MessageStatus.Request.MessageStatusRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.MessageStatus.Response.MessageStatusResponse;
 import mx.edu.unpa.ChatEnRed.services.MessageStatusService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/message-status")
 public class MessageStatusController {

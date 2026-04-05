@@ -12,7 +12,6 @@ import mx.edu.unpa.ChatEnRed.DTOs.Device.Request.DeviceRequest;
 import mx.edu.unpa.ChatEnRed.DTOs.Device.Response.DeviceResponse;
 import mx.edu.unpa.ChatEnRed.services.DeviceService;
 
-@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/device")
 public class DeviceController {
