@@ -75,7 +75,7 @@ public class User implements Serializable {
     private String publicKey;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private UserProfile profile;
+    private UserProfile userProfile;
 
     @PrePersist
     protected void onCreate() {
@@ -92,10 +92,4 @@ public class User implements Serializable {
         // No tocar createdAt; lastSeen se actualiza desde el servicio cuando corresponde.
     }
 
-    /**
-     * Relación inversa para poder hacer user.getUserProfile()
-     * mappedBy = "user" indica que UserProfile es quien manda en la relación
-     */
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private UserProfile userProfile;
 }

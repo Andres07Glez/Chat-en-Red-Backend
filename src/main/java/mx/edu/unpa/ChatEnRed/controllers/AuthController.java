@@ -26,7 +26,6 @@ import java.util.Collections;
 public class AuthController {
     @Autowired
     AuthenticationManager authenticationManager;
-
     @Autowired
     JwtUtils jwtUtils;
     @Autowired
@@ -35,17 +34,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        // 1. Autenticar con usuario y contraseña
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
-        // 2. Establecer contexto
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 3. Generar JWT
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        // 4. Obtener detalles del usuario
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         logger.info("Token generado para usuario {}: {}", loginRequest.getUsername(), jwt);
 
@@ -57,18 +50,15 @@ public class AuthController {
     }
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
-
         // 1. Convertir el SignupRequest (público) a UserRequest (interno)
         UserRequest userRequest = new UserRequest();
         userRequest.setUsername(signUpRequest.getUsername());
         userRequest.setEmail(signUpRequest.getEmail());
         userRequest.setPassword(signUpRequest.getPassword());
-
-        // 2. Establecer valores por defecto de seguridad
+        userRequest.setDisplayName(signUpRequest.getDisplayName());
         userRequest.setIsActive(true);
 
         // 3. Guardar usando tu servicio (que ya se encarga de encriptar la contraseña)
-        // Usamos map para devolver un JSON simple {"message": "..."}
         return userService.save(userRequest)
                 .map(user -> ResponseEntity.ok(Collections.singletonMap("message", "Usuario registrado exitosamente")))
                 .orElseGet(() -> ResponseEntity.badRequest().body(Collections.singletonMap("error", "Error: El usuario o email ya existe")));

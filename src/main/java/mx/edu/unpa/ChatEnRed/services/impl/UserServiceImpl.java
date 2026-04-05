@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityNotFoundException;
 
+import mx.edu.unpa.ChatEnRed.domains.UserProfile;
+import mx.edu.unpa.ChatEnRed.repositories.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,14 @@ import mx.edu.unpa.ChatEnRed.services.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private UserMapper userMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,9 +56,23 @@ public class UserServiceImpl implements UserService {
         User user = this.userMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
-        return Optional.of(user)
-				.map(userRepository::save)
-				.map(userMapper::toResponse);
+        user = userRepository.save(user);
+        // Flush necesario: UserProfile requiere el ID generado de User antes de persistirse
+        userRepository.flush();
+
+        // 2. Crear el UserProfile vinculado
+        //    displayName: usa el valor recibido o fallback al username si viene vacío/nulo
+        String displayName = (request.getDisplayName() != null && !request.getDisplayName().isBlank())
+                ? request.getDisplayName().strip()
+                : user.getUsername();
+
+        UserProfile profile = new UserProfile();
+        profile.setUser(user);             // establece la relación y el ID compartido (@MapsId)
+        profile.setDisplayName(displayName);
+        profile.setUpdatedAt(LocalDateTime.now());
+        userProfileRepository.save(profile);
+
+        return Optional.of(userMapper.toResponse(user));
     }
 
     @Override
