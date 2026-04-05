@@ -34,10 +34,10 @@ public interface SolicitudMapper {
         return SolicitudesResponse.builder()
                 .id(contact.getId())
                 .otherUserId(otherUser.getId())
-                .otherDisplayName(otherUser.getProfile() != null ?
-                        otherUser.getProfile().getDisplayName() : otherUser.getUsername())
-                .otherAvatarUrl(otherUser.getProfile() != null ?
-                        otherUser.getProfile().getAvatarUrl() : null)
+                .otherDisplayName(otherUser.getUserProfile() != null ?
+                        otherUser.getUserProfile().getDisplayName() : otherUser.getUsername())
+                .otherAvatarUrl(otherUser.getUserProfile() != null ?
+                        otherUser.getUserProfile().getAvatarUrl() : null)
                 .statusLabel(contact.getContactStatus().getLabel())
                 .statusCode(contact.getContactStatus().getCode())
                 .createdAt(contact.getCreatedAt())

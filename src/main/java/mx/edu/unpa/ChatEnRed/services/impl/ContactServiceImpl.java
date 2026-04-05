@@ -30,13 +30,10 @@ public class ContactServiceImpl implements ContactService {
 
     @Autowired
     private ContactRepository contactRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private ContactStatusRepository contactStatusRepository;
-
     @Autowired
     private ContactMapper contactMapper;
     @Autowired
@@ -83,15 +80,6 @@ public class ContactServiceImpl implements ContactService {
                 .map(contactMapper::toResponse);
     }
 
-    /*@Override
-    @Transactional
-    public Optional<Boolean> deleteById(Integer id) {
-        return contactRepository.findById(id)
-                .map(contact -> {
-                    contactRepository.deleteById(id);
-                    return true;
-                });
-    }*/
 
     @Override
     @Transactional
@@ -140,17 +128,6 @@ public class ContactServiceImpl implements ContactService {
                 .map(contactMapper::toResponse);
     }
 
-    /*@Override
-    @Transactional(readOnly = true)
-    public List<ContactResponse> findByOwnerUsername(String username) {
-        User owner = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        return contactRepository.findByOwner(owner)
-                .stream()
-                .map(contactMapper::toResponse)
-                .toList();
-    }*/
 
     @Override
     @Transactional(readOnly = true)
@@ -306,25 +283,31 @@ public class ContactServiceImpl implements ContactService {
             throw new IllegalArgumentException("No puedes aceptar una solicitud ajena");
         }
 
-        ContactStatus acceptedStatus = contactStatusRepository.findByCode("ACCEPTED")
+        ContactStatus acceptedStatus = contactStatusRepository.findByCode(CODE_ACCEPTED)
                 .orElseThrow(() -> new RuntimeException("Estado ACCEPTED no encontrado"));
 
         // 1. Actualizamos la original
         originalRequest.setContactStatus(acceptedStatus);
+        originalRequest.setUpdatedAt(LocalDateTime.now());
         contactRepository.save(originalRequest);
 
-        // 2. CREAMOS EL ESPEJO USANDO EL MAPPER
-        boolean existsReverse = contactRepository.existsByOwnerIdAndContactUserId(
-                currentUserId,
-                originalRequest.getOwner().getId()
-        );
-
-        if (!existsReverse) {
-            // ¡Aquí ocurre la magia! Una sola línea:
-            Contact mirrorContact = solicitudMapper.createMirror(originalRequest);
-
-            contactRepository.save(mirrorContact);
-        }
+        // 2. UPSERT del espejo (B→A):
+        //    - Si ya existe (de una aceptación anterior) → actualizamos su estado.
+        //    - Si no existe (primera vez) → lo creamos.
+        contactRepository
+                .findByOwnerIdAndContactUserId(currentUserId, originalRequest.getOwner().getId())
+                .ifPresentOrElse(
+                        mirror -> {
+                            // Caso re-aceptación: el espejo existe pero puede tener estado REMOVED u otro.
+                            mirror.setContactStatus(acceptedStatus);
+                            mirror.setUpdatedAt(LocalDateTime.now());
+                            contactRepository.save(mirror);
+                        },
+                        () -> {
+                            // Primera aceptación: crear espejo desde cero.
+                            contactRepository.save(solicitudMapper.createMirror(originalRequest));
+                        }
+                );
 
         return solicitudMapper.toResponse(originalRequest, currentUserId);
 
@@ -336,12 +319,22 @@ public class ContactServiceImpl implements ContactService {
         Contact contact = contactRepository.findById(contactId)
                 .orElseThrow(() -> new EntityNotFoundException("Registro no encontrado"));
 
-        if (contact.getOwner().getId().equals(currentUserId) ||
-                contact.getContactUser().getId().equals(currentUserId)) {
-            contactRepository.delete(contact);
-        } else {
+        boolean isOwner   = contact.getOwner().getId().equals(currentUserId);
+        boolean isContact = contact.getContactUser().getId().equals(currentUserId);
+
+        if (!isOwner && !isContact) {
             throw new RuntimeException("No tienes permiso para realizar esta acción");
         }
+
+        // Determinar los dos usuarios involucrados en la relación
+        Integer userAId = contact.getOwner().getId();
+        Integer userBId = contact.getContactUser().getId();
+
+        // Eliminar ambos lados: A→B y B→A
+        contactRepository.findByOwnerIdAndContactUserId(userAId, userBId)
+                .ifPresent(contactRepository::delete);
+        contactRepository.findByOwnerIdAndContactUserId(userBId, userAId)
+                .ifPresent(contactRepository::delete);
 
     }
 
