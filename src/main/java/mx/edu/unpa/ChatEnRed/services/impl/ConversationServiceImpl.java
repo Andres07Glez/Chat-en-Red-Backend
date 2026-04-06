@@ -219,6 +219,37 @@ public class ConversationServiceImpl implements ConversationService {
                 creator.getPublicKey()
         );
     }
+
+    @Override
+    @Transactional
+    public void leaveOrDeleteConversation(Integer conversationId, String username) {
+        User user = findUserByUsername(username);
+
+        ConversationMember membership = memberRepository
+                .findByConversationIdAndUserId(conversationId, user.getId())
+                .orElseThrow(() -> new AccessDeniedException(
+                        "No eres miembro de esta conversación"));
+
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Conversación no encontrada: " + conversationId));
+
+        boolean isDirect = "DIRECT".equals(conversation.getConversationType().getCode());
+        if (isDirect) {
+            // Chat directo: borrar conversación entera (en cascada elimina miembros y mensajes
+            // si están configurados con ON DELETE CASCADE en la BD, o podemos borrarlos aquí)
+            conversationRepository.delete(conversation);
+        } else {
+            // Grupo: solo quitar al usuario
+            memberRepository.delete(membership);
+
+            // Si no quedan miembros, eliminar el grupo
+            long remaining = memberRepository.countByConversationId(conversationId);
+            if (remaining == 0) {
+                conversationRepository.delete(conversation);
+            }
+        }
+    }
     // ── Helpers privados ──────────────────────────────────────────────────────
 
     private User findUserByUsername(String username) {

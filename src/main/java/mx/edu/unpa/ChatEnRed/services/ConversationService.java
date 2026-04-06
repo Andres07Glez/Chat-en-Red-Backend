@@ -21,5 +21,6 @@ public interface ConversationService {
     ChatListItemDTO  createGroup(CreateGroupRequest request, String creatorUsername);
     ChatListItemDTO findOrCreateDirectConversation(String currentUsername, Integer targetUserId);
     ConversationKeyResponse getMyConversationKey(Integer conversationId, String username);
+    void leaveOrDeleteConversation(Integer conversationId, String username);
 
 }

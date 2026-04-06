@@ -25,4 +25,5 @@ public interface MessageRepository extends JpaRepository<Message, Integer>{
     long countByConversationIdAndSenderIdNot(Integer conversationId, Integer myUserId);
     // Sobrecarga para contar TODO si lastReadAt es null (nunca ha entrado)
     long countByConversationId(Integer conversationId);
+    List<Message> findByIdInAndSenderId(List<Integer> ids, Integer senderId);
 }

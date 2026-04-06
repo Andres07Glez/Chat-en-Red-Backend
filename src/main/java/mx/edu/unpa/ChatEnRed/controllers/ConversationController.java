@@ -93,5 +93,12 @@ public class ConversationController {
                 conversationService.getMyConversationKey(conversationId, auth.getName())
         );
     }
+    @DeleteMapping("/{conversationId}")
+    public ResponseEntity<Void> leaveOrDelete(
+            @PathVariable Integer conversationId,
+            Authentication auth) {
+        conversationService.leaveOrDeleteConversation(conversationId, auth.getName());
+        return ResponseEntity.noContent().build();
+    }
 
 }

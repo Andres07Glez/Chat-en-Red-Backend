@@ -41,45 +41,22 @@ public class MessageServiceImpl implements MessageService{
 	@Override
 	@Transactional(readOnly=true)
 	public List<MessageResponse> findAll() {
-		// TODO Auto-generated method stub
 		return this.messageRepository.findAll().stream()
 				.map(messageMapper::toResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
 	@Transactional(readOnly=true)
 	public Optional<MessageResponse> findById(Integer id) {
-		// TODO Auto-generated method stub
 		return this.messageRepository.findById(id)
 				.map(messageMapper::toResponse);
 	}
 
-//	@Override
-//	@Transactional
-//	public Optional<MessageResponse> save(MessageRequest request) {
-//		// TODO Auto-generated method stub
-//		Conversation conversation=this.conversationRepository.findById(request.getConversationId())
-//				.orElseThrow(()->new EntityNotFoundException("Conversation not found with id:"+request.getConversationId()));
-//		conversation.setLastMessageAt(LocalDateTime.now());
-//		this.conversationRepository.save(conversation);
-//		User sender =userRepository.findById(request.getSenderId())
-//                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + request.getSenderId()));
-//
-//		MessageType messageType=this.messageTypeRepository.findByCode(request.getMessageTypeCode());
-//		Message message=this.messageMapper.toEntity(request, conversation, sender, messageType);
-//		return Optional.of(message)
-//				.map(messageRepository::save)
-//				.map(messageMapper::toResponse);
-//	}
-
 	@Override
 	@Transactional
 	public Optional<Boolean> deleteById(Integer id) {
-		// TODO Auto-generated method stub
 		return this.messageRepository.findById(id)
-				//  Borrado Lógico (Soft Delete)
-				// En lugar de borrar la fila, actualizamos deletedAt
 				.map(message->{
 					message.setDeletedAt(LocalDateTime.now());
 					this.messageRepository.save(message);
@@ -88,43 +65,13 @@ public class MessageServiceImpl implements MessageService{
 		
 	}
 
-//	@Override
-//	@Transactional
-//	public Optional<MessageResponse> update(Integer id, MessageRequest dto) {
-//		// TODO Auto-generated method stub
-//		Message existing = messageRepository.findById(id)
-//	            .orElseThrow(() -> new EntityNotFoundException("Message not found: " + id));
-//
-//		Conversation conv = conversationRepository.findById(dto.getConversationId())
-//	            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
-//	    MessageType mt = messageTypeRepository.findByCode(dto.getMessageTypeCode());
-//
-//	    User sender =userRepository.findById(dto.getSenderId())
-//	    		.orElseThrow(() -> new EntityNotFoundException("User not found"));
-//
-//	    existing.setConversation(conv);
-//	    existing.setSender(sender);
-//	    existing.setMessageType(mt);
-//	    existing.setContent(dto.getContent());
-//		existing.setIv(dto.getIv()); // Si cambia el contenido cifrado, cambia el IV
-//
-//	    return Optional.of(existing)
-//	    		.map(messageRepository::save)
-//				.map(messageMapper::toResponse);
-//
-//	}
-
-
 	@Override
 	@Transactional
 	public List<MessageResponse> getChatMessages(Integer conversationId, String currentUsername) {
-
-		// 1. Obtener usuario actual
 		User currentUser = userRepository.findByUsername(currentUsername)
 				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
 		// 2. SEGURIDAD: Verificar que el usuario pertenezca al chat
-		// Nota: Asegúrate de tener este método en ConversationMemberRepository
 		boolean isMember = memberRepository.existsByConversationIdAndUserId(conversationId, currentUser.getId());
 
 		if (!isMember) {
@@ -142,7 +89,6 @@ public class MessageServiceImpl implements MessageService{
 		// 4. Convertir a DTO y calcular isMine
 		return messages.stream().map(msg -> {
 			MessageResponse dto = messageMapper.toResponse(msg);
-			// Lógica para saber si el mensaje es mío
 			if (msg.getSender() != null) {
 				dto.setMine(msg.getSender().getId().equals(currentUser.getId()));
 			} else {
@@ -158,8 +104,6 @@ public class MessageServiceImpl implements MessageService{
 	@Override
 	@Transactional
 	public MessageResponse sendMessage(MessageRequest request, String username) {
-
-		// 1. Obtener usuario (Remitente)
 		User sender = userRepository.findByUsername(username)
 				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
@@ -179,11 +123,7 @@ public class MessageServiceImpl implements MessageService{
 				.orElseThrow(() -> new EntityNotFoundException("Tipo de mensaje inválido"));
 
 		// 5. Mapear DTO -> Entidad (Usando tu Mapper existente)
-		// Nota: request.setCreatedAt(LocalDateTime.now()) si tu mapper lo requiere explícitamente,
-		// pero tu entidad tiene @PrePersist, así que está cubierto.
 		Message newMessage = messageMapper.toEntity(request, conversation, sender, msgType);
-
-		// Aseguramos contenido y IV (simulación de cifrado por ahora)
 		newMessage.setContent(request.getContent());
 		newMessage.setIv(request.getIv());
 
@@ -196,37 +136,44 @@ public class MessageServiceImpl implements MessageService{
 
 		// 8. Convertir a Respuesta
 		MessageResponse response = messageMapper.toResponse(savedMessage);
-		// --- AQUÍ EMPIEZA LO NUEVO (BROADCAST) ---
-
-		// A. Configurar nombre del remitente
+		// Configurar nombre del remitente
 		response.setSenderName(sender.getUsername());
 
-		// B. Preparamos el mensaje para el WebSocket
+		// Preparamos el mensaje para el WebSocket
 		// Importante: Para el que recibe el mensaje por WS, 'mine' es false por defecto.
-		// (El frontend comparará IDs si es necesario, pero enviémoslo como false para asegurar que salga a la izquierda en el receptor)
 		response.setMine(false);
 
-		// 1. ENVIAR A LA SALA (Ya lo tienes)
+		// 1. Broadcast  A LA SALA
 		String chatDestination = "/topic/chat/" + request.getConversationId();
 		messagingTemplate.convertAndSend(chatDestination, response);
 
-		// 2. Obtener todos los miembros de esta conversación
-		List<Integer> memberIds = memberRepository.findUserIdsByConversationId(request.getConversationId());
+		// Notificación personal a cada miembro (para actualizar preview en chat-list)
+		memberRepository.findUserIdsByConversationId(request.getConversationId())
+				.forEach(userId ->
+						messagingTemplate.convertAndSend("/topic/user/" + userId, response));
 
-		for (Integer userId : memberIds) {
-			// Canal personal: /topic/user/{userId}
-			String userDestination = "/topic/user/" + userId;
-
-			// Enviamos el mismo response. El frontend decidirá qué hacer con él.
-			// Nota: El contenido va cifrado, el frontend deberá descifrarlo para el preview.
-			messagingTemplate.convertAndSend(userDestination, response);
-		}
-
-		// F. Ajuste final para la respuesta HTTP (Para ti mismo, que acabas de enviar)
-		// Esto es para que en TU pantalla actual salga verde (derecha) inmediatamente.
+		//  Ajuste final para la respuesta HTTP (Para ti mismo, que acabas de enviar)
 		response.setMine(true);
 
 		return response;
+	}
+
+	@Override
+	@Transactional
+	public int deleteMessages(List<Integer> messageIds, String username) {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+		// Solo carga los mensajes que realmente son del usuario (filtro en BD)
+		List<Message> ownMessages = messageRepository.findByIdInAndSenderId(messageIds, user.getId());
+
+		if (ownMessages.isEmpty()) return 0;
+
+		LocalDateTime now = LocalDateTime.now();
+		ownMessages.forEach(msg -> msg.setDeletedAt(now));
+		messageRepository.saveAll(ownMessages);
+
+		return ownMessages.size();
 	}
 
 

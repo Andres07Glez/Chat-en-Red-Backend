@@ -23,4 +23,5 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     List<Integer> findUserIdsByConversationId(@Param("chatId") Integer conversationId);
 
     Optional<ConversationMember> findByConversationIdAndUserId(Integer id, Integer id1);
+    long countByConversationId(Integer conversationId);
 }
