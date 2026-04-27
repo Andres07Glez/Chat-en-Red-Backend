@@ -1,0 +1,26 @@
+services:
+  db-chat:
+    image: mysql:8.0
+    container_name: chat_db_server
+    environment:
+      MYSQL_DATABASE: chat_app
+      MYSQL_ROOT_PASSWORD: Manuel1921@
+    ports:
+      - "3308:3306"
+    volumes:
+      - chat_data_volume:/var/lib/mysql
+
+  chat-backend:
+    build: .
+    container_name: chat_app_container
+    ports:
+      - "8181:8181"
+    environment:
+      MYSQL_HOST: db-chat
+      SERVER_SSL_KEY_STORE_PASSWORD: chatEnRed2026
+      APP_JWT_SECRET: EstaEsUnaClaveSuperSecretaParaDesarrollo_ChatEnRed_2026_Key_DebeSerLarga
+    depends_on:
+      - db-chat
+
+volumes:
+  chat_data_volume:

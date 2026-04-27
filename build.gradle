@@ -70,3 +70,6 @@ sourceSets {
         }
     }
 }
+bootJar {
+	archiveFileName = 'app.jar'
+}
